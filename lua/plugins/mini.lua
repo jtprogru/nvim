@@ -1,9 +1,8 @@
 -- mini.icons must be set up first — other plugins (which-key, bufferline,
 -- render-md, mini.statusline) read icons from it via mock_nvim_web_devicons().
+-- mini.statusline itself is configured in config/statusline.lua.
 require("mini.icons").setup()
 MiniIcons.mock_nvim_web_devicons()
-
-require("mini.statusline").setup({ use_icons = true })
 
 require("mini.files").setup({
   windows = { preview = true, width_preview = 60 },
