@@ -19,6 +19,7 @@ local order = {
   "obsidian",
   "quarto",
   "rustaceanvim",
+  "dap",           -- after rustaceanvim (rust filetype override needs RustLsp)
 }
 
 for _, name in ipairs(order) do
