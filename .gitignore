@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Python venv (if added later in this dir)
+venv/
+.venv/
+__pycache__/
+
+# Editor / tooling caches
+.luarc.json
+.neoconf.json
+.serena/
+.cache/
+.claude/
+
+# Local overrides
+lazy-lock.json
+lazyvim.json
+local.lua
