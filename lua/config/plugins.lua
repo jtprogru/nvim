@@ -128,6 +128,30 @@ require("mini.statusline").setup({ use_icons = true })
 require("mini.files").setup({
   windows = { preview = true, width_preview = 60 },
   options = { permanent_delete = false },
+  mappings = {
+    go_in = "l",
+    go_in_plus = "<CR>", -- Enter: open file (and close explorer) / enter dir
+    go_out = "h",
+    go_out_plus = "H",
+    close = "q",
+    reset = "<BS>",
+    show_help = "g?",
+    synchronize = "=",
+    trim_left = "<",
+    trim_right = ">",
+    mark_goto = "'",
+    mark_set = "m",
+  },
+})
+
+-- Extra in-explorer bindings: <Esc> to close
+vim.api.nvim_create_autocmd("User", {
+  pattern = "MiniFilesBufferCreate",
+  callback = function(args)
+    vim.keymap.set("n", "<Esc>", function()
+      require("mini.files").close()
+    end, { buffer = args.data.buf_id, desc = "Close explorer" })
+  end,
 })
 require("mini.surround").setup()
 require("mini.ai").setup()
