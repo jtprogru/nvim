@@ -12,6 +12,9 @@ vim.pack.add({
   { src = "https://github.com/nvim-tree/nvim-web-devicons" },
   { src = "https://github.com/echasnovski/mini.nvim" },
 
+  -- treesitter (main branch — see lua/plugins/treesitter.lua for sync install)
+  { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
+
   -- UI
   { src = "https://github.com/ellisonleao/gruvbox.nvim" },
   { src = "https://github.com/folke/which-key.nvim" },

@@ -10,10 +10,10 @@ require("noice").setup({
       ["vim.lsp.util.stylize_markdown"] = true,
       ["cmp.entry.get_documentation"] = true,
     },
-    progress = { enabled = true },
+    progress = { enabled = true, view = "mini" },  -- bottom-right small
     hover = { enabled = true },
     signature = { enabled = false }, -- blink.cmp handles signature
-    message = { enabled = true },
+    message = { enabled = true, view = "mini" },   -- merge with progress, no top-right popup
   },
   presets = {
     bottom_search = true,         -- classic bottom cmdline for `/`
@@ -24,9 +24,9 @@ require("noice").setup({
   },
   messages = {
     enabled = true,
-    view = "notify",
-    view_error = "notify",
-    view_warn = "notify",
+    view = "mini",            -- regular :echo / msg_show go to bottom-right
+    view_error = "notify",    -- errors stay loud (top-right popup)
+    view_warn = "notify",     -- warnings stay loud
     view_history = "messages",
   },
   routes = {

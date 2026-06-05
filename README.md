@@ -198,21 +198,17 @@ nvim-new/
 
 ## Treesitter parsers
 
-Конфиг полагается **только на парсеры из коробки** (`$VIMRUNTIME/parser/`): `c`, `lua`, `markdown`, `markdown_inline`, `query`, `vim`, `vimdoc`, `diff`. Они автоматически активируются ftplugins'ами Neovim — никаких настроек не требуется.
+Конфиг использует `nvim-treesitter` (ветка `main`) с **синхронной установкой** парсеров на первом старте. Файл [`lua/plugins/treesitter.lua`](lua/plugins/treesitter.lua) проверяет список нужных парсеров в `~/.local/share/nvim-new/site/parser/`, и если каких-то нет — компилирует их через `tree-sitter` CLI блокирующе. Один раз ~1 минута, дальше моментально.
 
-`nvim-treesitter` (плагин) намеренно не подключён: его ветка `main` под 0.12 требует синхронной сборки парсеров через `tree-sitter` CLI на первом старте, ветка `master` мёртвая (использует выпиленный API). Это слишком хрупко для стартового конфига.
+**Требование**: `tree-sitter` CLI на PATH. Ставится автоматически:
+- через Mason: `tree-sitter-cli` в `ensure_installed` ([`lua/plugins/mason.lua`](lua/plugins/mason.lua))
+- либо вручную: `cargo install tree-sitter-cli` или `npm install -g tree-sitter-cli`
 
-Если очень хочется TS-подсветку для конкретного языка (Go, Python, Rust и т.п.), парсер ставится вручную:
+Текущий набор парсеров (см. список в `treesitter.lua`): bash, c, cpp, css, diff, dockerfile, go (+ gomod/gosum/gotmpl/gowork), helm, hcl, html, ini, json/jsonc, lua (+ luadoc/luap), make, markdown (+ markdown_inline), python, query, regex, rust, sql, terraform, toml, tsx, typescript, vim, vimdoc, yaml.
 
-```bash
-brew install tree-sitter        # CLI компилятор
-cd /tmp && git clone --depth 1 https://github.com/tree-sitter/tree-sitter-go
-cd tree-sitter-go && tree-sitter build -o ~/.local/share/nvim-new/site/parser/go.so
-```
+Чтобы добавить парсер: дописать в `parsers = {...}` в `treesitter.lua`, перезапустить nvim — он сам докомпилит недостающее.
 
-После рестарта nvim 0.12 сам подхватит `go.so` из `site/parser/` и применит свои встроенные queries. Для большинства Go/Python/Rust-кода regex-подсветка `:syntax` тоже работает — она просто менее точная.
-
-Альтернатива на будущее, когда nvim-treesitter `main` устаканится: вернуть его в `plugins.lua` и синхронно вызвать `ts.install(...):wait(120000)` на первом старте.
+**Почему нельзя только bundled-парсеры**: Neovim 0.12.2 несёт парсеры для c/lua/markdown/query/vim/vimdoc/diff, но queries от nvim-treesitter `main` используют поля (`operator:`, `field:`) которых нет в старых bundled-парсерах — открытие lua-файла падает с `Invalid field name`. Поэтому подменяем bundled-парсеры свежими.
 
 ## TODO / места для шлифовки
 

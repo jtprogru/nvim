@@ -3,7 +3,8 @@
 -- then append <name> to the list below.
 
 local order = {
-  "mason",         -- early so :MasonInstall is available even if later setups error
+  "mason",         -- first: prepends mason/bin to PATH (treesitter needs tree-sitter-cli)
+  "treesitter",    -- second: blocks on parser install (one-time on fresh setup)
   "mini",          -- icons used by which-key / bufferline / render-md
   "gruvbox",       -- colorscheme
   "which-key",

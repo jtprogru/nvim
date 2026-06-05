@@ -47,6 +47,7 @@ require("mason-tool-installer").setup({
     "gh",
     "markdown-toc",
     "tfsec",
+    "tree-sitter-cli", -- needed by nvim-treesitter to compile parsers
   },
   auto_update = false,
   run_on_start = true,
