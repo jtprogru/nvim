@@ -86,6 +86,9 @@ end, { desc = "Toggle line numbers" })
 map("n", "<leader>uL", function()
   vim.wo.relativenumber = not vim.wo.relativenumber
 end, { desc = "Toggle relative numbers" })
+map("n", "<leader>uW", function()
+  vim.wo.list = not vim.wo.list
+end, { desc = "Toggle whitespace (list)" })
 
 -- Gitsigns hop (kept binding from old config)
 map("n", "<leader>gj", function()

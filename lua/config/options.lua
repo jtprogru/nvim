@@ -41,7 +41,15 @@ opt.pumheight = 12
 opt.pumblend = 10
 
 opt.list = true
-opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
+opt.listchars = {
+  tab = "» ",
+  trail = "·",
+  nbsp = "␣",
+  space = "·",
+  eol = "↴",
+  precedes = "«",
+  extends = "»",
+}
 opt.fillchars = { eob = " ", fold = " ", foldopen = "v", foldclose = ">", foldsep = "│" }
 
 opt.foldmethod = "expr"
