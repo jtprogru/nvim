@@ -20,6 +20,7 @@ local order = {
   "quarto",
   "rustaceanvim",
   "dap",           -- after rustaceanvim (rust filetype override needs RustLsp)
+  "neotest",       -- after dap (neotest's <leader>td uses dap strategy)
 }
 
 for _, name in ipairs(order) do

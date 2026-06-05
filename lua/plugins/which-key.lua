@@ -10,6 +10,7 @@ require("which-key").setup({
     { "<leader>o", group = "Obsidian", icon = { icon = "󰠮", color = "purple" } },
     { "<leader>q", group = "Quarto", icon = { icon = "󰐩", color = "blue" } },
     { "<leader>s", group = "Search" },
+    { "<leader>t", group = "Test", icon = { icon = "󰙨", color = "green" } },
     { "<leader>u", group = "UI" },
     { "<leader>w", group = "Window" },
   },

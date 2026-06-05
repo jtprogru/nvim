@@ -193,6 +193,54 @@ Inlay hints автоматически включаются для сервер�
 
 ---
 
+## Tests (neotest, `<leader>t`)
+
+`lua/plugins/neotest.lua`. Адаптеры: Go (gotestsum/go test), Python (pytest), Lua (plenary.busted). Rust перехватывается на ft=rust → `:RustLsp testables`.
+
+| Сочетание | Действие |
+|---|---|
+| `<leader>tt` | Run nearest test |
+| `<leader>tT` | Run file |
+| `<leader>ta` | Run all (по cwd) |
+| `<leader>tl` | Run last |
+| `<leader>tS` | Stop |
+| `<leader>td` | Debug nearest (через DAP) |
+| `<leader>tD` | Debug file (через DAP) |
+| `<leader>ts` | Toggle summary (боковая панель) |
+| `<leader>to` | Открыть output текущего теста |
+| `<leader>tO` | Toggle output panel |
+| `<leader>tw` | Watch file (auto-rerun on save) |
+| `]t` / `[t` | Следующий / предыдущий failed-тест |
+
+Внутри summary-панели (`<leader>ts`): `<CR>`/`l` expand, `r` run, `u` stop, `d` debug, `i` jump, `o` output, `m` mark.
+
+---
+
+## Debug (nvim-dap, `<leader>d`)
+
+`lua/plugins/dap.lua`. Адаптеры: Go (delve), Python (debugpy), Rust (codelldb через `:RustLsp debuggables`).
+
+| Сочетание | Действие |
+|---|---|
+| `<leader>db` | Toggle breakpoint |
+| `<leader>dB` | Conditional breakpoint (prompt) |
+| `<leader>dL` | Log point (prompt) |
+| `<leader>dc` | Continue / start session |
+| `<leader>dC` | Run to cursor |
+| `<leader>di` | Step into |
+| `<leader>do` | Step over |
+| `<leader>dO` | Step out |
+| `<leader>dj` / `<leader>dk` | Down / up по stack frames |
+| `<leader>dl` | Run last |
+| `<leader>dr` | Toggle REPL |
+| `<leader>dq` | Terminate |
+| `<leader>du` | Toggle UI (scopes / breakpoints / stacks / watches + repl) |
+| `<leader>de` (n / v) | Eval expression под курсором |
+
+В Rust-буферах `<leader>dc` → `:RustLsp debuggables` (выбор Cargo-таргета через codelldb).
+
+---
+
 ## Cmdline / messages (noice)
 
 `:` открывает popup в центре, `/` остаётся внизу.

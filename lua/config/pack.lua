@@ -44,6 +44,12 @@ vim.pack.add({
   -- LSP server configs
   { src = "https://github.com/neovim/nvim-lspconfig" },
 
+  -- testing (neotest)
+  { src = "https://github.com/nvim-neotest/neotest" },
+  { src = "https://github.com/fredrikaverpil/neotest-golang" },
+  { src = "https://github.com/nvim-neotest/neotest-python" },
+  { src = "https://github.com/nvim-neotest/neotest-plenary" },
+
   -- debugging (nvim-dap)
   { src = "https://github.com/nvim-neotest/nvim-nio" },
   { src = "https://github.com/mfussenegger/nvim-dap" },
