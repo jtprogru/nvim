@@ -41,6 +41,8 @@ require("mini.bufremove").setup()
 
 require("mini.notify").setup({
   window = { config = { border = "rounded" } },
-  lsp_progress = { enable = true },
+  -- LSP progress is handled by noice (bottom-right mini view). Disabling it
+  -- here prevents a duplicate top-right popup for the same indexing event.
+  lsp_progress = { enable = false },
 })
 vim.notify = require("mini.notify").make_notify()
