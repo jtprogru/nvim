@@ -4,9 +4,9 @@
 
 Файлы-источники:
 
-- [`lua/config/keymaps.lua`](lua/config/keymaps.lua) — общие биндинги
+- [`lua/config/keymaps.lua`](lua/config/keymaps.lua) — daily-driver биндинги
 - [`lua/config/lsp.lua`](lua/config/lsp.lua) — LSP (через `LspAttach`)
-- [`lua/config/plugins.lua`](lua/config/plugins.lua) — биндинги плагинов (obsidian, quarto, bufferline и т.п.)
+- [`lua/plugins/<name>.lua`](lua/plugins/) — плагин-специфичные биндинги (obsidian, quarto, bufferline, conform, noice, img-clip)
 
 ---
 
@@ -181,7 +181,7 @@ Inlay hints автоматически включаются для сервер�
 
 ## Completion (blink.cmp)
 
-`lua/config/plugins.lua`. Базовый пресет `default`.
+`lua/plugins/blink.lua`. Базовый пресет `default`.
 
 | Сочетание | Режим | Действие |
 |---|---|---|
@@ -206,7 +206,7 @@ Inlay hints автоматически включаются для сервер�
 
 ## Obsidian / Templater (`<leader>o`)
 
-`lua/config/plugins.lua`. Активны в markdown/mdx-буферах внутри vault'а.
+`lua/plugins/obsidian.lua`. Активны в markdown/mdx-буферах внутри vault'а.
 
 | Сочетание | Действие |
 |---|---|
@@ -234,7 +234,7 @@ Inlay hints автоматически включаются для сервер�
 
 ## Quarto (`<leader>q`)
 
-`lua/config/plugins.lua`. Только filetype `quarto`/`markdown`.
+`lua/plugins/quarto.lua`. Только filetype `quarto`/`markdown`.
 
 | Сочетание | Действие |
 |---|---|

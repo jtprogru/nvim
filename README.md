@@ -80,18 +80,45 @@ vim.pack клонирует все плагины при первом старт
 
 ```
 nvim-new/
-├── init.lua
+├── init.lua                # entry: loads in fixed order
 ├── lua/
 │   ├── config/
 │   │   ├── options.lua     # vim.opt, filetype, diagnostic
-│   │   ├── keymaps.lua     # все горячие клавиши (вне LSP)
-│   │   ├── autocmds.lua    # macOS bg sync, yank highlight, etc.
-│   │   ├── plugins.lua     # vim.pack.add + setup всех плагинов
-│   │   └── lsp.lua         # vim.lsp.config + LspAttach-keymaps
+│   │   ├── pack.lua        # vim.pack.add — what to install (URLs only)
+│   │   ├── keymaps.lua     # daily-driver keymaps (LSP/picker/git/UI)
+│   │   ├── autocmds.lua    # macOS bg sync, yank hl, spell-on-md
+│   │   └── lsp.lua         # vim.lsp.config + LspAttach keymaps
+│   ├── plugins/            # per-plugin setup (one file per plugin)
+│   │   ├── init.lua        # explicit load order
+│   │   ├── mason.lua       # mason + mason-tool-installer (ensure_installed)
+│   │   ├── mini.lua        # mini.* family setup (icons/files/statusline/…)
+│   │   ├── gruvbox.lua
+│   │   ├── which-key.lua
+│   │   ├── bufferline.lua
+│   │   ├── noice.lua
+│   │   ├── fzf-lua.lua
+│   │   ├── smart-splits.lua
+│   │   ├── gitsigns.lua
+│   │   ├── blink.lua
+│   │   ├── conform.lua
+│   │   ├── render-md.lua
+│   │   ├── img-clip.lua
+│   │   ├── obsidian.lua    # obsidian + Templater commands + <leader>o*
+│   │   ├── quarto.lua      # quarto + filetype-local <leader>q*
+│   │   └── rustaceanvim.lua
 │   └── util/
-│       └── templater.lua   # Obsidian Templater engine (скопирован)
-└── README.md
+│       └── templater.lua   # Obsidian Templater (<% tp.* %>) engine
+├── KEYMAPS.md
+├── README.md
+└── nvim-pack-lock.json     # vim.pack lockfile (commit it)
 ```
+
+**Принципы**:
+- `config/pack.lua` — **что** установлено, единственное место с URL'ами плагинов.
+- `plugins/<name>.lua` — **как** настроен конкретный плагин (опции, команды, плагин-специфичные кеймапы).
+- `config/keymaps.lua` — daily-driver кеймапы, не привязанные к одному плагину (буферы, окна, LSP-навигация, UI-тоглы).
+- Чтобы добавить плагин: 1) дописать URL в `pack.lua`, 2) создать `plugins/<name>.lua`, 3) добавить имя в `order` в `plugins/init.lua`.
+- Чтобы удалить плагин: обратное — удалить из `pack.lua`, удалить файл, убрать из `order`. Один файл = одна зона риска.
 
 ## Сравнение с прошлой версией (LazyVim)
 
