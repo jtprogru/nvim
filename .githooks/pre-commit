@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v tokei >/dev/null 2>&1; then
+  echo "pre-commit: tokei not in PATH, skipping Lua LoC badge update" >&2
+  exit 0
+fi
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+README="$REPO_ROOT/README.md"
+[[ -f "$README" ]] || exit 0
+
+LOC=$(tokei -t Lua "$REPO_ROOT" | awk '/^ Lua /{print $4; exit}')
+if [[ -z "${LOC:-}" ]]; then
+  echo "pre-commit: tokei output unexpected, skipping" >&2
+  exit 0
+fi
+
+if grep -qE "img\.shields\.io/badge/lua-${LOC}%20LoC-" "$README"; then
+  exit 0
+fi
+
+sed -i.bak -E "s|(img\.shields\.io/badge/lua-)[0-9]+(%20LoC)|\1${LOC}\2|" "$README"
+rm -f "${README}.bak"
+
+git add "$README"
+echo "pre-commit: updated Lua LoC badge → ${LOC}"
