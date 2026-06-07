@@ -57,6 +57,7 @@ vim.lsp.config("gopls", {
 
 vim.lsp.config("basedpyright", {
   settings = {
+    python = { pythonPath = "/opt/homebrew/bin/python3" },
     basedpyright = {
       analysis = {
         typeCheckingMode = "standard",

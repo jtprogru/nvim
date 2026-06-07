@@ -51,7 +51,7 @@ require("dap-go").setup({
 
 -- debugpy installed by mason lives in its own venv
 local mason_debugpy = vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/bin/python"
-require("dap-python").setup(vim.uv.fs_stat(mason_debugpy) and mason_debugpy or "python3")
+require("dap-python").setup(vim.uv.fs_stat(mason_debugpy) and mason_debugpy or "/opt/homebrew/bin/python3")
 
 -- Rust handled by rustaceanvim — :RustLsp debuggables uses codelldb if installed.
 -- We override <leader>dc for rust filetype below to wire that in.

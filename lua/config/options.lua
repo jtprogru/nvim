@@ -1,7 +1,7 @@
 local opt = vim.opt
 local HOME = os.getenv("HOME")
 
-vim.g.python3_host_prog = HOME .. "/.config/nvim/venv/bin/python3"
+vim.g.python3_host_prog = HOME .. "/.config/nvim-new/venv/bin/python3"
 
 opt.number = true
 opt.relativenumber = true

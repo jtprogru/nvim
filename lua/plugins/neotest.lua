@@ -7,6 +7,7 @@ require("neotest").setup({
     require("neotest-python")({
       dap = { justMyCode = false },
       runner = "pytest",
+      python = "/opt/homebrew/bin/python3",
       args = { "-vv" },
     }),
     require("neotest-plenary"), -- Lua/busted (plenary.busted) — for nvim plugin tests

@@ -1,6 +1,6 @@
 # nvim-new — конфиг для Neovim 0.12.x без LazyVim
 
-![Lua LoC](https://img.shields.io/badge/lua-1646%20LoC-blueviolet?logo=lua)
+![Lua LoC](https://img.shields.io/badge/lua-1648%20LoC-blueviolet?logo=lua)
 
 Запуск параллельно со старым: `NVIM_APPNAME=nvim-new nvim` (есть alias `vn` в `~/.aliases`).
 
