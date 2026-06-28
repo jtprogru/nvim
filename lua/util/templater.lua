@@ -331,7 +331,7 @@ local function eval_expr(s, ctx)
           elseif name == "trim" then
             v = vim.trim(v)
           elseif name == "replace" then
-            v = (v:gsub(escape_pat(args[1] or ""), (args[2] or ""):gsub("%%", "%%%%")))
+            v = (v:gsub(escape_pat(args[1] or ""), ((args[2] or ""):gsub("%%", "%%%%"))))
           else
             error("unknown method: " .. name)
           end
