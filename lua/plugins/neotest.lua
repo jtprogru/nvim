@@ -7,7 +7,9 @@ require("neotest").setup({
     require("neotest-python")({
       dap = { justMyCode = false },
       runner = "pytest",
-      python = "/opt/homebrew/bin/python3",
+      -- No explicit `python`: neotest-python then auto-detects the interpreter,
+      -- including uv (`uv run python ...` when uv.lock is present), $VIRTUAL_ENV
+      -- and any project-local .venv.
       args = { "-vv" },
     }),
     require("neotest-plenary"), -- Lua/busted (plenary.busted) — for nvim plugin tests

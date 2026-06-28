@@ -49,9 +49,13 @@ require("dap-go").setup({
   delve = { detached = vim.fn.has("win32") == 0 },
 })
 
--- debugpy installed by mason lives in its own venv
+-- The adapter interpreter must have debugpy installed; mason ships it in its own
+-- venv. The program *being debugged* is a separate concern, resolved below.
 local mason_debugpy = vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/bin/python"
-require("dap-python").setup(vim.uv.fs_stat(mason_debugpy) and mason_debugpy or "/opt/homebrew/bin/python3")
+local dap_python = require("dap-python")
+dap_python.setup(vim.uv.fs_stat(mason_debugpy) and mason_debugpy or "/opt/homebrew/bin/python3")
+-- Run the debuggee with the project's uv .venv (falls back to Homebrew python).
+dap_python.resolve_python = function() return require("util.python").path() end
 
 -- Rust handled by rustaceanvim — :RustLsp debuggables uses codelldb if installed.
 -- We override <leader>dc for rust filetype below to wire that in.
