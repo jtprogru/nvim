@@ -147,6 +147,54 @@ map("n", "<leader>E", function()
   require("mini.files").open(vim.uv.cwd(), true)
 end, { desc = "Explorer (cwd)" })
 
+-- Floating terminal toggle (native :terminal, no plugin) — like the old config
+do
+  local term = { buf = nil, win = nil }
+
+  local function toggle_term()
+    -- Open window already visible -> hide it.
+    if term.win and vim.api.nvim_win_is_valid(term.win) then
+      vim.api.nvim_win_hide(term.win)
+      term.win = nil
+      return
+    end
+
+    if not (term.buf and vim.api.nvim_buf_is_valid(term.buf)) then
+      term.buf = vim.api.nvim_create_buf(false, false)
+    end
+
+    -- Centered floating window, ~80% of the editor.
+    local width = math.floor(vim.o.columns * 0.8)
+    local height = math.floor(vim.o.lines * 0.8)
+    term.win = vim.api.nvim_open_win(term.buf, true, {
+      relative = "editor",
+      width = width,
+      height = height,
+      row = math.floor((vim.o.lines - height) / 2),
+      col = math.floor((vim.o.columns - width) / 2),
+      style = "minimal",
+      border = "rounded",
+      title = " terminal ",
+      title_pos = "center",
+    })
+
+    -- Start the shell only the first time this buffer is used.
+    if vim.bo[term.buf].buftype ~= "terminal" then
+      vim.cmd("terminal")
+      vim.bo[term.buf].buflisted = false
+    end
+
+    vim.cmd("startinsert")
+  end
+
+  -- <C-/> in modern terminals; <C-_> is the legacy byte some emulators send.
+  map({ "n", "t" }, "<C-/>", toggle_term, { desc = "Toggle terminal" })
+  map({ "n", "t" }, "<C-_>", toggle_term, { desc = "Toggle terminal" })
+end
+
+-- Leave terminal-mode with <Esc><Esc> (kept from old config)
+map("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+
 -- which-key popup (shows current leader-group bindings)
 map("n", "<leader>?", function()
   require("which-key").show({ global = false })
