@@ -55,9 +55,34 @@ vim.lsp.config("gopls", {
   },
 })
 
+-- Resolve the Python interpreter for a given project root:
+--   1. an activated virtualenv ($VIRTUAL_ENV),
+--   2. a project-local .venv (uv's default), searched upward from the root,
+--   3. fall back to the pinned Homebrew python.
+local function python_path(root)
+  local venv = os.getenv("VIRTUAL_ENV")
+  if venv and vim.uv.fs_stat(venv .. "/bin/python") then
+    return venv .. "/bin/python"
+  end
+  local hit = vim.fs.find(".venv", {
+    path = root or vim.fn.getcwd(),
+    upward = true,
+    type = "directory",
+  })[1]
+  if hit and vim.uv.fs_stat(hit .. "/bin/python") then
+    return hit .. "/bin/python"
+  end
+  return "/opt/homebrew/bin/python3"
+end
+
 vim.lsp.config("basedpyright", {
+  -- Pick the interpreter per-project so uv's .venv imports resolve.
+  before_init = function(_, config)
+    config.settings = config.settings or {}
+    config.settings.python = config.settings.python or {}
+    config.settings.python.pythonPath = python_path(config.root_dir)
+  end,
   settings = {
-    python = { pythonPath = "/opt/homebrew/bin/python3" },
     basedpyright = {
       analysis = {
         typeCheckingMode = "standard",
