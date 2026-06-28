@@ -1,0 +1,9 @@
+std = "vim"
+
+[lints]
+# Inline callbacks (function() foo() end) are idiomatic Neovim Lua and match
+# stylua's own output; selene's one-statement-per-line rule fights both.
+multiple_statements = "allow"
+# Mixed array+map tables are the standard shape for plugin specs (which-key,
+# fzf-lua, neotest, RustLsp opts), not a bug.
+mixed_table = "allow"

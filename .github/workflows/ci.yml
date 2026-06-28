@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: lint & format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: stylua --check
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          version: latest
+          args: --check init.lua lua tests
+
+      - name: selene
+        uses: NTBBloodbath/selene-action@v1
+        with:
+          version: 0.31.0
+          args: init.lua lua tests
+
+  test:
+    name: unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Neovim (nightly — config targets 0.12 / vim.pack)
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: nightly
+
+      - name: Fetch plenary.nvim into the vim.pack opt dir
+        run: |
+          dest="$HOME/.local/share/nvim/site/pack/core/opt/plenary.nvim"
+          git clone --depth 1 https://github.com/nvim-lua/plenary.nvim "$dest"
+
+      - name: Run unit tests
+        run: make test
+
+# Note: `make smoke` (loading the full config headless) is a local gate only.
+# It needs the entire plugin set installed via vim.pack — network fetches plus a
+# treesitter parser build — which is too flaky to gate CI on. Run it locally
+# with `make smoke` or `make all`.

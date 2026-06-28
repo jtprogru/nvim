@@ -1,0 +1,39 @@
+---
+# Custom selene standard library: Lua 5.1 + Neovim's `vim` global +
+# the busted globals used in tests/. Referenced by selene.toml (std = "vim").
+base: lua51
+
+globals:
+  vim:
+    any: true
+
+  # Runtime globals created by plugins after setup().
+  MiniIcons:
+    any: true
+
+  # selene's stock lua51 std models io.open() handles but not the predefined
+  # io.stderr / io.stdout handles, so it false-flags `:write` on them.
+  io.stderr:
+    any: true
+  io.stdout:
+    any: true
+
+  # busted (plenary) test DSL — used in tests/*_spec.lua
+  describe:
+    args:
+      - type: string
+      - type: function
+  it:
+    args:
+      - type: string
+      - type: function
+  before_each:
+    args:
+      - type: function
+  after_each:
+    args:
+      - type: function
+  pending:
+    any: true
+  assert:
+    any: true

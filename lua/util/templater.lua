@@ -145,6 +145,8 @@ local function tokenize(s)
       table.insert(tokens, { type = "op", value = c })
       i = i + 1
     else
+      -- selene: allow(if_same_then_else)
+      -- distinct branch (skip an unrecognized char), incidentally same body
       i = i + 1
     end
   end
