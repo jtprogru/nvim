@@ -376,19 +376,20 @@ function M.render(content, ctx)
   ctx.now = ctx.now or os.time()
   ctx.title = ctx.title or ""
   ctx.creation = ctx.creation or ctx.now
-  return (content:gsub("<%%%-?(.-)%-?%%>", function(expr)
-    local ok, val = pcall(eval_expr, expr, ctx)
-    if not ok then
-      vim.notify("Templater: " .. tostring(val) .. "\nexpr: <%" .. expr .. "%>", vim.log.levels.WARN)
-      return "<%" .. expr .. "%>"
-    end
-    return tostring(val)
-  end))
+  return (
+    content:gsub("<%%%-?(.-)%-?%%>", function(expr)
+      local ok, val = pcall(eval_expr, expr, ctx)
+      if not ok then
+        vim.notify("Templater: " .. tostring(val) .. "\nexpr: <%" .. expr .. "%>", vim.log.levels.WARN)
+        return "<%" .. expr .. "%>"
+      end
+      return tostring(val)
+    end)
+  )
 end
 
-local TEMPLATES_DIR = vim.fn.expand(
-  "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/SecondBrain/_Система/1. Шаблоны"
-)
+local TEMPLATES_DIR =
+  vim.fn.expand("~/Library/Mobile Documents/iCloud~md~obsidian/Documents/SecondBrain/_Система/1. Шаблоны")
 local VAULT_DIR = vim.fn.expand("~/Library/Mobile Documents/iCloud~md~obsidian/Documents/SecondBrain")
 
 function M.templates_dir()

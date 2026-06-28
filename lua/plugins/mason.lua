@@ -41,7 +41,7 @@ require("mason-tool-installer").setup({
     -- Python tools
     "debugpy",
     -- Debug adapters
-    "codelldb",       -- Rust / C / C++ via rustaceanvim's :RustLsp debuggables
+    "codelldb", -- Rust / C / C++ via rustaceanvim's :RustLsp debuggables
     -- Misc
     "ast-grep",
     "gh",

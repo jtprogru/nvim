@@ -50,11 +50,21 @@ require("obsidian").setup({
 local function tp()
   return require("util.templater")
 end
-vim.api.nvim_create_user_command("TemplaterInsert", function() tp().pick_and_insert() end, {})
-vim.api.nvim_create_user_command("TemplaterDaily", function() tp().daily() end, {})
-vim.api.nvim_create_user_command("TemplaterYesterday", function() tp().daily({ offset = -1 }) end, {})
-vim.api.nvim_create_user_command("TemplaterTomorrow", function() tp().daily({ offset = 1 }) end, {})
-vim.api.nvim_create_user_command("TemplaterFromName", function(o) tp().insert_at_cursor(o.args) end, { nargs = 1 })
+vim.api.nvim_create_user_command("TemplaterInsert", function()
+  tp().pick_and_insert()
+end, {})
+vim.api.nvim_create_user_command("TemplaterDaily", function()
+  tp().daily()
+end, {})
+vim.api.nvim_create_user_command("TemplaterYesterday", function()
+  tp().daily({ offset = -1 })
+end, {})
+vim.api.nvim_create_user_command("TemplaterTomorrow", function()
+  tp().daily({ offset = 1 })
+end, {})
+vim.api.nvim_create_user_command("TemplaterFromName", function(o)
+  tp().insert_at_cursor(o.args)
+end, { nargs = 1 })
 
 -- Obsidian / Templater keymaps
 local map = vim.keymap.set
