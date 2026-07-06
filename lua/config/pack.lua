@@ -64,20 +64,10 @@ vim.pack.add({
   -- tooling
   { src = "https://github.com/mason-org/mason.nvim" },
   { src = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim" },
+
+  -- pack management UI (:PackStatus / :PackUpdate / :PackUpdateAll)
+  { src = "https://github.com/jtprogru/pack-ui.nvim" },
 })
 
-vim.api.nvim_create_user_command("PackUpdate", function()
-  vim.pack.update()
-end, { desc = "vim.pack: interactive update (review buffer, :w to confirm)" })
-
-vim.api.nvim_create_user_command("PackUpdateAll", function()
-  vim.pack.update(nil, { force = true })
-end, { desc = "vim.pack: update all plugins without confirmation" })
-
-vim.api.nvim_create_user_command("PackStatus", function()
-  local lines = {}
-  for _, p in ipairs(vim.pack.get()) do
-    table.insert(lines, string.format("%s  %s", p.active and "●" or "○", p.spec.name or p.spec.src))
-  end
-  vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO, { title = "vim.pack" })
-end, { desc = "vim.pack: list installed plugins" })
+-- pack-ui.nvim registers the :PackStatus / :PackUpdate / :PackUpdateAll commands
+-- itself; its keymaps/options are configured in lua/plugins/pack-ui.lua.

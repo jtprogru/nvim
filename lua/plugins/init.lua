@@ -22,6 +22,7 @@ local order = {
   "rustaceanvim",
   "dap", -- after rustaceanvim (rust filetype override needs RustLsp)
   "neotest", -- after dap (neotest's <leader>td uses dap strategy)
+  "pack-ui", -- after which-key (setup() adds a which-key group)
 }
 
 for _, name in ipairs(order) do
