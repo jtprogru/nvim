@@ -119,7 +119,7 @@
       "src": "https://github.com/jmbuhr/otter.nvim"
     },
     "pack-ui.nvim": {
-      "rev": "1d91aadd14698d1b14ea8e933368e712f9d9a75a",
+      "rev": "13734ce81172378feee160478c4dd500930757a4",
       "src": "https://github.com/jtprogru/pack-ui.nvim"
     },
     "plenary.nvim": {
