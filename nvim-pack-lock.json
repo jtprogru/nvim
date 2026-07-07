@@ -119,7 +119,7 @@
       "src": "https://github.com/jmbuhr/otter.nvim"
     },
     "pack-ui.nvim": {
-      "rev": "13734ce81172378feee160478c4dd500930757a4",
+      "rev": "370f1806ff4e757058c76d3bec5df08b6fb7d39c",
       "src": "https://github.com/jtprogru/pack-ui.nvim"
     },
     "plenary.nvim": {
@@ -135,7 +135,7 @@
       "src": "https://github.com/MeanderingProgrammer/render-markdown.nvim"
     },
     "rustaceanvim": {
-      "rev": "aa71a54c52e66514211ad321cf3602562510f27b",
+      "rev": "8c7b4e0a8333f21e3c981d2009c2af237904e803",
       "src": "https://github.com/mrcjkb/rustaceanvim"
     },
     "smart-splits.nvim": {
