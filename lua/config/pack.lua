@@ -31,6 +31,9 @@ vim.pack.add({
   { src = "https://github.com/saghen/blink.cmp", version = vim.version.range("v1") },
   { src = "https://github.com/stevearc/conform.nvim" },
 
+  -- linting (security scanners as inline diagnostics)
+  { src = "https://github.com/mfussenegger/nvim-lint" },
+
   -- languages
   { src = "https://github.com/mrcjkb/rustaceanvim" },
   { src = "https://github.com/davidmh/mdx.nvim" },

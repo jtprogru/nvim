@@ -20,11 +20,15 @@ require("mason-tool-installer").setup({
     "yaml-language-server",
     -- Linters
     "ansible-lint",
+    "bandit", -- Python SAST
     "gitleaks",
     "golangci-lint",
+    "hadolint", -- Dockerfile linter
+    "kube-linter", -- k8s YAML / Helm security static analysis
     "markdownlint-cli2",
     "semgrep",
     "shellcheck",
+    "trivy", -- vuln + misconfig + secrets across the whole stack (incl. Rust)
     -- Formatters
     "gofumpt",
     "goimports",

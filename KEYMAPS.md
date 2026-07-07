@@ -390,6 +390,53 @@ Inlay hints автоматически включаются для сервер�
 
 ---
 
+## Security: inline-линтинг (nvim-lint)
+
+`lua/plugins/lint.lua`. Сканеры запускаются **в фоне без терминала** и показываются как обычная диагностика (подчёркивания в коде). Работают на открытии файла и на сохранении (`BufReadPost` / `BufWritePost`); бинарники берутся из mason.
+
+| ft | Линтер | Что ловит |
+|---|---|---|
+| `python` | bandit | Python SAST |
+| `dockerfile` | hadolint + trivy | best-practice + misconfig |
+| `terraform` / `hcl` | trivy | misconfig в IaC |
+| `yaml` | trivy | misconfig (k8s-манифесты) |
+| `go` | golangci-lint | + gosec, если включён в `.golangci.yml` |
+
+| Сочетание | Действие |
+|---|---|
+| `<leader>cx` | Прогнать security-линтеры сейчас (без сохранения) |
+| `]d` / `[d` | Следующая / предыдущая находка (общая диагностика) |
+| `<leader>sd` | Список находок в буфере (fzf-lua) |
+
+Находки идут в общий поток диагностики, поэтому `<leader>ud` (toggle diagnostics) их тоже прячет/показывает. `semgrep`, `gitleaks`, `kube-linter` пофайлово не вешаются (репо-широкие) — их гоняй из терминала, см. ниже.
+
+---
+
+## Security-сканеры (mason CLI)
+
+Репо-широкие проверки, которых нет в inline-режиме выше. Это CLI-инструменты из mason (`lua/plugins/mason.lua`), **без keymap'ов** — запускаются из терминала. Проще всего из плавающего терминала nvim (`<C-/>`): там `~/.local/share/nvim/mason/bin` уже в `PATH`. Для запуска из внешнего shell добавь этот путь в `PATH` сам.
+
+`trivy` — швейцарский нож на весь стек (deps + misconfig + secrets + SBOM), включая Rust, где остального почти нет. Начинать проще всего с него.
+
+| Цель / язык | Команда | Инструмент |
+|---|---|---|
+| **Весь репозиторий за раз** | `trivy fs .` | trivy (deps + secrets + misconfig) |
+| **IaC-мисконфиги** (Terraform, k8s YAML, Dockerfile) | `trivy config .` | trivy |
+| **Секреты** (все языки) | `gitleaks detect --source . -v` | gitleaks |
+| **SAST-паттерны** (Go, Python, JS/TS…) | `semgrep --config auto .` | semgrep |
+| **Python** | `bandit -r . -ll` | bandit |
+| **Go** | `golangci-lint run` (включает `gosec`) | golangci-lint |
+| **Terraform / HCL** | `tfsec .` | tfsec |
+| **YAML / k8s / Helm** | `kube-linter lint .` | kube-linter |
+| **Dockerfile** | `hadolint Dockerfile` | hadolint |
+| **Rust** | `trivy fs .` (Cargo.lock) + `cargo clippy` | trivy / clippy* |
+
+\* `cargo clippy` идёт через `cargo`/rustaceanvim, не через mason. Для Lua security-сканеров нет — `selene`/`luacheck` проверяют стиль, не безопасность.
+
+Полезные флаги: `trivy fs --scanners vuln,secret,misconfig .` (выбор проверок), `trivy fs --severity HIGH,CRITICAL .` (только серьёзное), `semgrep --config auto --json -o out.json .` (машинный вывод для CI). Что установлено — видно в `:Mason` (вкладка Linter).
+
+---
+
 ## Подсказки
 
 - `:WhichKey` или подержи `<leader>` — popup со всеми сочетаниями текущего контекста.

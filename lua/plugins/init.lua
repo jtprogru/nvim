@@ -15,6 +15,7 @@ local order = {
   "gitsigns",
   "blink", -- before config.lsp (capabilities)
   "conform",
+  "lint", -- nvim-lint: security scanners as diagnostics (needs mason on PATH)
   "render-md",
   "img-clip",
   "obsidian",
