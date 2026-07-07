@@ -46,7 +46,7 @@
       "src": "https://github.com/davidmh/mdx.nvim"
     },
     "mini.nvim": {
-      "rev": "d74190c1528aaf12ba5f3a29d03524c6b81e18b3",
+      "rev": "928971c3cfe99ddf29659acc31214cfa836fabe4",
       "src": "https://github.com/echasnovski/mini.nvim"
     },
     "neotest": {
@@ -93,6 +93,10 @@
       "rev": "fbdb48c2ed45f4a8293d0d483f7730d24467ccb6",
       "src": "https://github.com/theHamsta/nvim-dap-virtual-text"
     },
+    "nvim-lint": {
+      "rev": "a219b2c9e5b4765e5c845aba119dad55806fcaf1",
+      "src": "https://github.com/mfussenegger/nvim-lint"
+    },
     "nvim-lspconfig": {
       "rev": "d224a1920728ba129880efc700d4a0180ac4ecbb",
       "src": "https://github.com/neovim/nvim-lspconfig"
@@ -111,7 +115,7 @@
       "src": "https://github.com/nvim-tree/nvim-web-devicons"
     },
     "obsidian.nvim": {
-      "rev": "1052c0c8359c550d5379296f896a778284dc5a78",
+      "rev": "7687c7e62c3e12617d9eea6401e9e1f190e2ccab",
       "src": "https://github.com/obsidian-nvim/obsidian.nvim"
     },
     "otter.nvim": {
