@@ -24,10 +24,13 @@ jobs:
           args: --check init.lua lua tests
 
       - name: selene
-        uses: NTBBloodbath/selene-action@v1
-        with:
-          version: 0.31.0
-          args: init.lua lua tests
+        env:
+          SELENE_VERSION: 0.31.0
+        run: |
+          curl -fsSL "https://github.com/Kampfkarren/selene/releases/download/${SELENE_VERSION}/selene-${SELENE_VERSION}-linux.zip" -o selene.zip
+          unzip -q selene.zip
+          chmod +x selene
+          ./selene init.lua lua tests
 
   test:
     name: unit tests
