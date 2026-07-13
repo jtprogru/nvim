@@ -13,6 +13,10 @@ end
 
 au({ "VimEnter", "FocusGained" }, {
   group = aug("macos_background_sync", { clear = true }),
+  -- `nested` so the colorscheme reload triggered by changing `background` emits
+  -- its `ColorScheme` event. Without it the reload's `hi clear` wipes plugin
+  -- highlight groups (e.g. bufferline's) and nothing re-creates them.
+  nested = true,
   callback = sync_macos_background,
 })
 
