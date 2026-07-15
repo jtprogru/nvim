@@ -134,6 +134,7 @@ vim.lsp.enable({
   "yamlls",
   "taplo",
   "ansiblels",
+  "terraformls",
 })
 -- rust-analyzer is started by rustaceanvim — do NOT enable it here.
 

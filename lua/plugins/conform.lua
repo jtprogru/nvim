@@ -15,6 +15,9 @@ require("conform").setup({
     json = { "jq" },
     yaml = { "yamlfmt" },
     toml = { "taplo" },
+    terraform = { "terraform_fmt" },
+    ["terraform-vars"] = { "terraform_fmt" },
+    hcl = { "terraform_fmt" },
   },
 })
 

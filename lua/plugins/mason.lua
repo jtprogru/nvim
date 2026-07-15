@@ -17,6 +17,7 @@ require("mason-tool-installer").setup({
     "ltex-ls-plus",
     "marksman",
     "ruff",
+    "terraform-ls",
     "yaml-language-server",
     -- Linters
     "ansible-lint",
