@@ -1,20 +1,18 @@
--- Make the active buffer clearly stand out. gruvbox's default bufferline
--- highlights leave the selected buffer almost indistinguishable from the fill,
--- especially in the light palette. We give the tabline three background levels
+-- Make the active buffer clearly stand out. The default bufferline highlights
+-- leave the selected buffer almost indistinguishable from the fill, especially
+-- in the light palette. We give the tabline three background levels
 -- (fill < inactive < selected) plus a bold active label and an accent bar.
 --
--- Colors are passed as *links* into bufferline's own `highlights` config rather
--- than set with nvim_set_hl: bufferline re-resolves these links from the live
--- palette on every ColorScheme (so they follow the runtime light<->dark switch,
--- see autocmds.lua) and derives the per-buffer icon backgrounds from the same
--- values, keeping the file icon on the same background as its tab.
+-- `highlights` is passed as a *function* rather than a table: bufferline calls
+-- it again on every ColorScheme (config.lua Config:resolve -> bufferline.lua
+-- ColorScheme autocmd), so reading the catppuccin palette inside means the
+-- tabline follows the runtime light<->dark switch (see autocmds.lua). It also
+-- derives the per-buffer icon backgrounds from these values, keeping the file
+-- icon on the same background as its tab.
 --
--- gruvbox exposes its palette as the *fg* of these GruvboxBg*/Fg* groups.
-local function ref(group)
-  return { highlight = group, attribute = "fg" }
-end
-local bg0, bg1, bg2 = ref("GruvboxBg0"), ref("GruvboxBg1"), ref("GruvboxBg2")
-local fg1, gray, accent = ref("GruvboxFg1"), ref("GruvboxGray"), ref("GruvboxYellow")
+-- catppuccin has no palette-as-highlight-groups to link against, so colors are
+-- resolved from its palette API instead. Accent is Sapphire — the single brand
+-- accent, same one plugins/mishka.lua uses for links and borders.
 
 require("bufferline").setup({
   options = {
@@ -36,9 +34,14 @@ require("bufferline").setup({
     -- A thin accent bar on the left of the active buffer. No underline.
     indicator = { style = "icon", icon = "▎" },
   },
-  highlights = (function()
-    -- The three depth levels, as fresh tables (bufferline deep-copies the map,
-    -- so sharing the ref values is safe). No italic anywhere.
+  highlights = function()
+    local c = require("catppuccin.palettes").get_palette()
+    -- fill < inactive < selected, from the most-contrasted level down to the
+    -- editor background itself.
+    local bg0, bg1, bg2 = c.base, c.surface0, c.surface1
+    local fg1, gray, accent = c.text, c.overlay1, c.sapphire
+
+    -- The three depth levels, as fresh tables. No italic anywhere.
     local function inactive()
       return { fg = gray, bg = bg1, bold = false, italic = false }
     end
@@ -87,7 +90,7 @@ require("bufferline").setup({
     end
 
     return hl
-  end)(),
+  end,
 })
 
 local map = vim.keymap.set

@@ -1,6 +1,6 @@
 # nvim-new — конфиг для Neovim 0.12.x без LazyVim
 
-![Lua LoC](https://img.shields.io/badge/lua-2044%20LoC-blueviolet?logo=lua)
+![Lua LoC](https://img.shields.io/badge/lua-2076%20LoC-blueviolet?logo=lua)
 
 Запуск параллельно со старым: `NVIM_APPNAME=nvim-new nvim` (есть alias `vn` в `~/.aliases`).
 
@@ -38,7 +38,7 @@
 - **Autocmds**: macOS dark/light sync.
 - **Gitsigns**: твои custom signs, blame на eol с форматом `<author> (<date>) - <summary>`.
 - **LSP-настройки**: gopls (hints + analyses + codelenses), basedpyright (standard, inlay), ruff (без hover), ltex-plus (ru-RU), marksman (markdown.mdx + mdx), lua_ls.
-- **Тема**: gruvbox.
+- **Тема**: «Мишка на сервере» — бренд-слой поверх catppuccin (Latte на свету, Macchiato в темноте, акцент Sapphire). Палитра из дизайн-кода блога jtprog.ru, см. `lua/plugins/mishka.lua`.
 - **Templater**: `lua/util/templater.lua` скопирован как есть.
 
 ## Что отвалилось от LazyVim (вернуть по вкусу)
@@ -94,7 +94,7 @@ nvim-new/
 │   │   ├── init.lua        # explicit load order
 │   │   ├── mason.lua       # mason + mason-tool-installer (ensure_installed)
 │   │   ├── mini.lua        # mini.* family setup (icons/files/statusline/…)
-│   │   ├── gruvbox.lua
+│   │   ├── mishka.lua      # бренд-тема поверх catppuccin
 │   │   ├── which-key.lua
 │   │   ├── bufferline.lua
 │   │   ├── noice.lua

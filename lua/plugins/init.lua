@@ -6,7 +6,7 @@ local order = {
   "mason", -- first: prepends mason/bin to PATH (treesitter needs tree-sitter-cli)
   "treesitter", -- second: blocks on parser install (one-time on fresh setup)
   "mini", -- icons used by which-key / bufferline / render-md
-  "gruvbox", -- colorscheme
+  "mishka", -- colorscheme (brand layer over catppuccin)
   "which-key",
   "bufferline",
   "noice",

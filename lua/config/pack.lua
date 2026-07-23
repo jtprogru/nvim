@@ -16,7 +16,7 @@ vim.pack.add({
   { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
 
   -- UI
-  { src = "https://github.com/ellisonleao/gruvbox.nvim" },
+  { src = "https://github.com/catppuccin/nvim", name = "catppuccin" },
   { src = "https://github.com/folke/which-key.nvim" },
   { src = "https://github.com/folke/noice.nvim" },
   { src = "https://github.com/akinsho/bufferline.nvim" },

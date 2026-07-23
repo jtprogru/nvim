@@ -1,4 +1,4 @@
--- mini.statusline configuration: gruvbox-themed sections and highlights.
+-- mini.statusline configuration: brand-themed sections and highlights.
 -- Owns MiniStatusline.setup() entirely; plugins/mini.lua only ensures the
 -- mini.nvim pack is on rtp. Loaded from init.lua after plugins/.
 
@@ -50,39 +50,35 @@ local function active()
   })
 end
 
--- Gruvbox palette (Pappas, dark medium-contrast).
-local g = {
-  bg0_h = "#1d2021",
-  bg1 = "#3c3836",
-  bg2 = "#504945",
-  fg1 = "#ebdbb2",
-  fg3 = "#bdae93",
-  fg4 = "#a89984",
-  red = "#fb4934",
-  green = "#b8bb26",
-  yellow = "#fabd2f",
-  blue = "#83a598",
-  purple = "#d3869b",
-  aqua = "#8ec07c",
-  orange = "#fe8019",
-}
-
 local function hl(name, opts)
   vim.api.nvim_set_hl(0, name, opts)
 end
 
+-- Палитра берётся заново на каждый вызов, а не один раз при загрузке: тема
+-- переключается между Latte и Macchiato в рантайме (autocmds.lua синхронизирует
+-- `background` с macOS), и get_palette() отдаёт цвета активного flavour.
+--
+-- Три уровня фона, как было на gruvbox: crust (неактивная строка) < surface0
+-- (имя файла) < surface1 (мета). Режимы — на катпуччиновских тонах, Normal
+-- забирает брендовый Sapphire (см. plugins/mishka.lua).
 local function paint()
-  hl("MiniStatuslineModeNormal", { fg = g.bg0_h, bg = g.aqua, bold = true })
-  hl("MiniStatuslineModeInsert", { fg = g.bg0_h, bg = g.green, bold = true })
-  hl("MiniStatuslineModeVisual", { fg = g.bg0_h, bg = g.orange, bold = true })
-  hl("MiniStatuslineModeReplace", { fg = g.bg0_h, bg = g.red, bold = true })
-  hl("MiniStatuslineModeCommand", { fg = g.bg0_h, bg = g.yellow, bold = true })
-  hl("MiniStatuslineModeOther", { fg = g.bg0_h, bg = g.purple, bold = true })
+  local c = require("catppuccin.palettes").get_palette()
 
-  hl("MiniStatuslineDevinfo", { fg = g.fg3, bg = g.bg2 })
-  hl("MiniStatuslineFilename", { fg = g.fg1, bg = g.bg1, bold = true })
-  hl("MiniStatuslineFileinfo", { fg = g.fg3, bg = g.bg2 })
-  hl("MiniStatuslineInactive", { fg = g.fg4, bg = g.bg0_h, italic = true })
+  local function mode(color)
+    return { fg = c.base, bg = color, bold = true }
+  end
+
+  hl("MiniStatuslineModeNormal", mode(c.sapphire))
+  hl("MiniStatuslineModeInsert", mode(c.green))
+  hl("MiniStatuslineModeVisual", mode(c.mauve))
+  hl("MiniStatuslineModeReplace", mode(c.red))
+  hl("MiniStatuslineModeCommand", mode(c.peach))
+  hl("MiniStatuslineModeOther", mode(c.lavender))
+
+  hl("MiniStatuslineDevinfo", { fg = c.subtext0, bg = c.surface1 })
+  hl("MiniStatuslineFilename", { fg = c.text, bg = c.surface0, bold = true })
+  hl("MiniStatuslineFileinfo", { fg = c.subtext0, bg = c.surface1 })
+  hl("MiniStatuslineInactive", { fg = c.overlay1, bg = c.crust, italic = true })
 end
 
 MiniStatusline.setup({ use_icons = true, content = { active = active } })
