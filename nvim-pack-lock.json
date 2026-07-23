@@ -9,6 +9,10 @@
       "rev": "655133c3b4c3e5e05ec549b9f8cc2894ac6f51b3",
       "src": "https://github.com/akinsho/bufferline.nvim"
     },
+    "catppuccin": {
+      "rev": "c7c692a0ad3080710893abbae100171819a3e4be",
+      "src": "https://github.com/catppuccin/nvim"
+    },
     "conform.nvim": {
       "rev": "619363c30309d29ffa631e67c8183f2a72caa373",
       "src": "https://github.com/stevearc/conform.nvim"
@@ -20,10 +24,6 @@
     "gitsigns.nvim": {
       "rev": "31d6fb2d618bca1482b9f274751ead5f03461408",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
-    },
-    "gruvbox.nvim": {
-      "rev": "154eb5ff5b96d0641307113fa385eaf0d36d9796",
-      "src": "https://github.com/ellisonleao/gruvbox.nvim"
     },
     "img-clip.nvim": {
       "rev": "b6ddfb97b5600d99afe3452d707444afda658aca",
@@ -106,7 +106,7 @@
       "src": "https://github.com/nvim-neotest/nvim-nio"
     },
     "nvim-treesitter": {
-      "rev": "a45a920ec04cda5624f6dea0ff6454c81c3ad2d5",
+      "rev": "bd41519ff7901da11ba6e1c8f419f17f2d94305a",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter",
       "version": "'main'"
     },
