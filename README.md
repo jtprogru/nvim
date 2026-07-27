@@ -1,6 +1,6 @@
 # nvim — конфиг для Neovim 0.12.x без LazyVim и без lazy.nvim
 
-![Lua LoC](https://img.shields.io/badge/lua-2078%20LoC-blueviolet?logo=lua)
+![Lua LoC](https://img.shields.io/badge/lua-2963%20LoC-blueviolet?logo=lua)
 
 Плагины ставит нативный `vim.pack`, LSP поднимается через `vim.lsp.config`/`vim.lsp.enable`. Никакого фреймворка сверху: всё, что делает конфиг, лежит в этом репозитории и читается за один вечер.
 
@@ -180,7 +180,13 @@ rm -rf ~/.config/nvim ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim
 │   │   └── img-clip.lua, rustaceanvim.lua
 │   └── util/
 │       ├── templater.lua       # движок Obsidian Templater (<% tp.* %>)
+│       ├── profile.lua         # профайлер: модули/буферы/LSP/подвисания (NVIM_PROFILE=1)
+│       ├── vault.lua           # путь к Obsidian-хранилищу + проверка «внутри ли»
 │       └── python.lua          # резолв интерпретатора: $VIRTUAL_ENV → .venv → brew
+├── scripts/
+│   ├── profile.sh              # headless-прогон профайлера по списку файлов
+│   ├── profile_run.lua         # драйвер прогона внутри nvim
+│   └── lsplog_stat.py          # разбор ~/.local/state/nvim/lsp.log
 ├── tests/                      # plenary busted + smoke
 ├── .githooks/pre-commit        # обновляет LoC-бейдж в README (нужен tokei)
 ├── .github/workflows/ci.yml    # stylua --check, selene, unit-тесты
@@ -201,9 +207,41 @@ rm -rf ~/.config/nvim ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim
 
 ## Языки и инструменты
 
-**LSP-серверы** включены в [`lua/config/lsp.lua`](lua/config/lsp.lua): gopls, basedpyright, ruff, lua_ls, bashls, yamlls, taplo, marksman, ltex_plus (ru-RU, словари ru-RU и en-US), ansiblels, terraformls. rust-analyzer поднимает rustaceanvim — включать его через `vim.lsp.enable` нельзя, будет два инстанса.
+**LSP-серверы** включены в [`lua/config/lsp.lua`](lua/config/lsp.lua): gopls, basedpyright, ruff, lua_ls, bashls, yamlls, taplo, marksman, harper_ls, ansiblels, terraformls. rust-analyzer поднимает rustaceanvim — включать его через `vim.lsp.enable` нельзя, будет два инстанса.
 
 Свои настройки серверов: gopls с inlay hints, расширенными analyses и codelenses; basedpyright в режиме `standard` с inlay hints; ruff без hover (не перебивает basedpyright); marksman на `markdown.mdx` и `mdx`.
+
+**Проверка текста — harper_ls, а не ltex.** ltex-ls это LanguageTool на JVM, и в замерах он оказался самым дорогим сервером в конфиге. harper-ls — статический бинарник на Rust:
+
+| | RSS | до готовности | русский (4 ошибки) | английский (5 ошибок) |
+| --- | --- | --- | --- | --- |
+| ltex-ls-plus | 1405 МиБ | 3657 мс | 4 | 1 |
+| harper-ls | 165 МиБ | 110 мс | 0 | 4 |
+
+Ровно единица у ltex на английском — не опечатка в таблице: он был настроен `language = "ru-RU"` и английский текст разбирал как русский, ловя только повтор слова.
+
+Расплата за замену: harper знает только английский. Русская **орфография** при этом не потерялась — встроенный `spell` и так включён на markdown/gitcommit/text/tex ([`autocmds.lua`](lua/config/autocmds.lua)) с `spelllang = en_us,ru_ru`, и на тестовой заметке он пометил все три русские опечатки, которые находил ltex. Потерялась русская **грамматика**: повторы слов, согласование, пунктуация. Если это начнёт мешать — вернуть ltex_plus в `vim.lsp.enable` и в `ensure_installed`, конфиг для него лежит в истории git.
+
+Настройки harper: `dialect = "American"`, `markdown.IgnoreLinkTitle`, и главное — `isolateEnglish = true`. Заметки тут русские с английскими терминами внутри, и на смешанном абзаце этот флаг срезал 6 диагностик до 2: «Alertmanager» читался как опечатка в «Micromanager», а русские заголовки собирали претензии на title case. Настоящая английская опечатка при этом осталась. Обратная сторона — на чисто английском тексте изредка теряется одна находка из пяти.
+
+Список filetypes берётся из того, что везёт nvim-lspconfig (27 штук, включая языки программирования — комментарии и докстринги тоже проверяются), плюс `mdx`, `text` и `rst`, которые раньше держал ltex. Читается из `vim.lsp.config.harper_ls.filetypes`, а не хардкодится, чтобы не разъезжалось с апстримом. Словарь для «add to dictionary» — `~/.config/harper-ls/`.
+
+**marksman не поднимается внутри Obsidian-хранилища.** Он отдаёт диагностику по всему workspace, а не по открытому файлу: одна открытая заметка давала 6165 диагностик от marksman против 81 от проверялки текста. Neovim под каждый URI из `publishDiagnostics` заводит буфер через `vim.uri_to_bufnr`, так что открытие одной заметки молча создавало ~2200 буферов, а bufferline на каждой перерисовке таблайна проходил по ним всем и звал `vim.diagnostic.get()` без фильтра — полный `deepcopy` всех диагностик.
+
+| Заметка 689 строк | буферов | диагностик | перерисовка таблайна | выход из редактора |
+| --- | --- | --- | --- | --- |
+| было | 2199 | 6246 | 16.95 мс | 1363 мс |
+| стало | 2 | 81 | 0.90 мс | 22 мс |
+
+Внутри хранилища ту же навигацию закрывает свой сервер obsidian.nvim: `definition`, `references`, `documentSymbol`, `workspaceSymbol`, `rename`, `codeAction`, `foldingRange`, completion по `[`, `#`, `^`. Не покрываются `hover`, `semanticTokens` и `codeLens` — семантическую подсветку в markdown и так дают treesitter с render-markdown. Вне хранилища marksman работает как раньше и стоит дёшево: 86 МиБ на репозитории с 4 md-файлами, 103 МиБ на репозитории с 183, перерисовка таблайна 0.5–0.6 мс.
+
+Реализовано через `root_dir`-функцию, которая просто не зовёт `on_dir` для путей внутри хранилища (см. [`lsp-root_dir()`](https://neovim.io/doc/user/lsp.html#lsp-root_dir)). Путь к хранилищу лежит в [`lua/util/vault.lua`](lua/util/vault.lua) — единственное место, откуда его читают и `obsidian.lua`, и `lsp.lua`; переопределяется через `$OBSIDIAN_VAULT`.
+
+**ansiblels не мог запуститься.** `:checkhealth vim.lsp` ругался «Unknown filetype 'yaml.ansible'», и это была не косметика: у сервера в списке filetypes стоял только составной `yaml.ansible`, а его в конфиге никто не выставлял. На плейбуке поднимался один yamlls, при том что mason исправно ставил `ansible-language-server` и `ansible-lint`. Теперь он слушает обычный `yaml`, но стартует только когда рядом нашёлся `ansible.cfg`, `.ansible-lint`, `site.yml` или каталог `playbooks` — тем же приёмом с `root_dir`, что и marksman. Без этой калитки `vim.lsp.enable` при ненайденном маркере уходит в single-file режим и поднимал бы сервер на каждом YAML в системе.
+
+Оставшиеся предупреждения про `yaml.docker-compose`, `yaml.gitlab` и `yaml.helm-values` — косметика. yamlls держит в своём списке и простой `yaml`, так что на эти файлы он цепляется в любом случае; составные filetypes нужны только тем, кто их выставляет.
+
+Предупреждение про position encodings тоже никуда не денется: harper-ls отдаёт `utf-16` независимо от того, что ему предлагают (проверено — если объявить только `utf-8`, он всё равно отвечает `utf-16`), а obsidian-ls работает в `utf-8` и поднимается мимо `vim.lsp.config`, так что рычага на него нет. Neovim пересчитывает позиции по `offset_encoding` каждого клиента отдельно, так что на практике это не ломается: прогон с правками по крупным русским заметкам не дал ни одной ошибки декодирования.
 
 **Форматтеры** ([`conform.lua`](lua/plugins/conform.lua)): stylua, ruff_format + ruff_organize_imports, shfmt, goimports + gofumpt, markdownlint-cli2, jq, yamlfmt, taplo, terraform_fmt. `<leader>cf` форматирует, `<leader>uf` / `<leader>uF` глушат автоформат глобально / для буфера.
 
@@ -220,6 +258,61 @@ rm -rf ~/.config/nvim ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim
 Добавить парсер: дописать в `parsers = {...}`, перезапустить nvim — он сам докомпилит недостающее.
 
 Почему нельзя обойтись bundled-парсерами: Neovim 0.12 несёт парсеры для c/lua/markdown/query/vim/vimdoc/diff, но queries из `main`-ветки nvim-treesitter используют поля (`operator:`, `field:`), которых в этих парсерах нет — открытие lua-файла падает с `Invalid field name`. Поэтому bundled-парсеры подменяются свежими.
+
+## Профилирование
+
+Встроенный профайлер — [`lua/util/profile.lua`](lua/util/profile.lua). Выключен по умолчанию, включается до загрузки конфига, потому что хукает `require` первым делом:
+
+```bash
+NVIM_PROFILE=1 nvim note.md
+nvim --cmd 'lua vim.g.nvim_profile = true' note.md
+```
+
+Внутри: `:Profile` — отчёт в скретч-буфере, `:ProfileDump [path]` — JSON в `stdpath("state")/profile/`, `:ProfileReset` — сбросить накопленное. `NVIM_PROFILE_DUMP=1` дампит автоматически на выходе.
+
+Что меряется:
+
+| Раздел | Как снимается | Отвечает на вопрос |
+| --- | --- | --- |
+| `MODULE LOAD` | обёртка над глобальным `require`, self/total время | какой плагин съедает старт |
+| `BUFFER OPENS` | `BufReadPre` → `BufReadPost` → `FileType` → `BufWinEnter`+`schedule` | сколько стоит открыть конкретный файл |
+| `LSP CLIENTS` | обёртка над `vim.lsp.start` + `LspAttach` | сколько сервер поднимается до готовности |
+| `SERVER PROGRESS` | автокоманда `LspProgress` (`$/progress`) | сколько идёт индексация на стороне сервера |
+| `DIAGNOSTICS LATENCY` | `LspNotify` (`didOpen`/`didChange`) → per-client хендлер `publishDiagnostics` | сколько сервер думает над правкой |
+| `LSP REQUESTS` | автокоманда `LspRequest` (`pending` → `complete`) | какие запросы и к кому тормозят |
+| `UI STALLS` | `uv` таймер на 100 мс, ловит опоздания | когда и на чём подвисает главный цикл |
+| `LUA SAMPLES` | `jit.profile`, свёрнутые стеки | *где именно* сгорело время (нужен `NVIM_PROFILE_SAMPLE=1`) |
+| `SHUTDOWN` | `VimLeavePre` → `VimLeave` | сколько выход ждёт языковые серверы |
+
+`UI STALLS` отвечает на «когда», `LUA SAMPLES` — на «где». Сэмплер видит только Lua-кадры: время внутри C (regex, декодирование RPC, системные вызовы) записывается на тот Lua-кадр, который туда ушёл. Включается отдельно, потому что добавляет несколько процентов накладных.
+
+Всё висит на публичном API (`vim.lsp.start`, автокоманды `LspAttach`/`LspRequest`/`LspNotify`/`LspProgress`, `client.handlers`), внутренностей Neovim профайлер не трогает.
+
+### Автоматический прогон
+
+[`scripts/profile.sh`](scripts/profile.sh) поднимает headless-nvim с полным конфигом, открывает файлы по очереди, ждёт, пока все серверы замолчат, при желании имитирует набор текста и печатает отчёт + пишет JSON:
+
+```bash
+make profile FILES="README.md"                 # один файл
+make profile FILES="note.md" EDITS=20          # с имитацией набора — так ловится шторм didChange
+make profile-vault N=10 EDITS=15               # 10 случайных заметок из Obsidian-хранилища
+./scripts/profile.sh --dir ~/notes -n 5 -e 10  # напрямую, со своими путями
+./scripts/profile.sh --vault 3 -e 10 --lua     # + сэмплирующий профайлер Lua
+```
+
+`EDITS` — ключевой параметр: без правок сервер проверяет документ один раз, а тормоза начинаются именно при наборе. Хранилище берётся из `$OBSIDIAN_VAULT`, по умолчанию — iCloud-путь SecondBrain.
+
+### Разбор `lsp.log` задним числом
+
+Всё, что языковой сервер пишет в stderr, Neovim складывает в `~/.local/state/nvim/lsp.log` с именем клиента и таймстампом. Это бесплатная история за все дни, когда профайлер не был включён:
+
+```bash
+make profile-log                    # весь лог
+make profile-log SINCE=7d           # последняя неделя
+./scripts/lsplog_stat.py --client ltex-ls-plus --top 20
+```
+
+Скрипт считает объём stderr по клиентам, разбирает `java.util.logging`-сообщения ltex-ls, склеивает `logTextToBeChecked` → `checkAnnotatedTextFragment` в длительность проверки, сводит `initialize`/`shutdown`/`exit` (расхождение = сервер пережил nvim) и показывает самые busy минуты. Разрешение таймстампов в логе — секунда, так что длительности там снизу.
 
 ## Разработка конфига
 
@@ -248,4 +341,5 @@ git config core.hooksPath .githooks
 - [ ] Подровнять mini.statusline под вкус.
 - [ ] Если стартап заметно просядет — перевести obsidian/quarto/render-md на ft-autocmd lazy-load (`nvim --startuptime /tmp/nv.log` перед тем, как что-то оптимизировать).
 - [ ] Решить, нужны ли sessions (persistence.nvim) и trouble.nvim.
+- [ ] Пожить с harper_ls и понять, насколько не хватает русской грамматики (повторы слов, согласование, пунктуация) — её встроенный `spell` не закрывает. Если не хватает, вариант не откатываться целиком, а поднимать ltex_plus только внутри хранилища, тем же приёмом с `root_dir`, что и marksman.
 - [ ] Flash.nvim (`s`/`S`) — попробовать, если не хватает прыжков.

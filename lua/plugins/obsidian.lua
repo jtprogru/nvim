@@ -1,9 +1,11 @@
 require("obsidian").setup({
   legacy_commands = false,
+  -- Vault path lives in util/vault.lua — config/lsp.lua reads the same value to
+  -- keep marksman out of the vault (see the comment there for why).
   workspaces = {
     {
       name = "SecondBrain",
-      path = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/SecondBrain",
+      path = require("util.vault").paths[1],
       strict = true,
     },
   },

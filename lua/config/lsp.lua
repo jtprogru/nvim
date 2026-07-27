@@ -88,20 +88,71 @@ vim.lsp.config("ruff", {
   end,
 })
 
-vim.lsp.config("ltex_plus", {
-  cmd = { "ltex-ls-plus" },
-  filetypes = { "markdown", "mdx", "gitcommit", "tex", "plaintex", "rst", "text" },
+-- harper-ls replaced ltex-ls here. ltex is LanguageTool on a JVM: 1405 MiB RSS
+-- and 3657 ms to ready, against 165 MiB and 110 ms for harper's static binary.
+--
+-- The trade: harper is English-only. Russian *spelling* is still covered — the
+-- built-in speller runs on markdown/gitcommit/text/tex (autocmds.lua) with
+-- `spelllang = en_us,ru_ru`, and it flagged every Russian typo in the test note
+-- that ltex did. What's gone is Russian *grammar*: repeated words, agreement,
+-- punctuation. Bring ltex back if that turns out to matter — see README.
+--
+-- Filetypes come from nvim-lspconfig's shipped list (27 of them, code included,
+-- so comments and docstrings get checked too) plus the prose types ltex used to
+-- own. Reading it back rather than hardcoding keeps it from drifting.
+vim.lsp.config("harper_ls", {
+  filetypes = vim.list_extend(vim.deepcopy(vim.lsp.config.harper_ls.filetypes or {}), { "mdx", "text", "rst" }),
   settings = {
-    ltex = {
-      language = "ru-RU",
-      additionalRules = { enablePickyRules = true, motherTongue = "ru-RU" },
-      dictionary = { ["ru-RU"] = {}, ["en-US"] = {} },
+    ["harper-ls"] = {
+      dialect = "American",
+      -- Notes here are Russian with English technical terms sprinkled in. On a
+      -- mixed paragraph this cut 6 diagnostics to 2: "Alertmanager" was being
+      -- read as a misspelt "Micromanager" and Russian headings drew title-case
+      -- complaints. What survives is the real English typo.
+      isolateEnglish = true,
+      -- "add to dictionary" code actions write to ~/.config/harper-ls/.
+      markdown = { IgnoreLinkTitle = true },
     },
   },
 })
 
+-- marksman reports diagnostics for the WHOLE workspace, not just open files.
+-- In the Obsidian vault that means ~6165 diagnostics for one open note, and
+-- Neovim creates a buffer per published URI (`vim.uri_to_bufnr`) — ~2200 of
+-- them. bufferline then walks all of it on every tabline redraw: 16.95 ms per
+-- redraw and 1363 ms to quit, against 1.24 ms / 22 ms without marksman.
+--
+-- Inside the vault obsidian.nvim's own server covers the same ground
+-- (definition, references, document/workspace symbols, rename, completion),
+-- so marksman only starts outside it. Not calling `on_dir` skips the server
+-- entirely — see |lsp-root_dir()|.
 vim.lsp.config("marksman", {
   filetypes = { "markdown", "mdx" },
+  root_dir = function(bufnr, on_dir)
+    if require("util.vault").has_buf(bufnr) then
+      return
+    end
+    on_dir(vim.fs.root(bufnr, { ".marksman.toml", ".git" }) or vim.fn.getcwd())
+  end,
+})
+
+-- ansiblels shipped with `filetypes = { "yaml.ansible" }` only, and nothing in
+-- this config ever produces that composite filetype — so the server could never
+-- start. `:checkhealth vim.lsp` flagged it as "Unknown filetype 'yaml.ansible'".
+--
+-- Attaching to plain `yaml` and gating on a project marker beats teaching
+-- `vim.filetype.add` to guess which YAML is a playbook: markers are unambiguous
+-- and there is nothing to keep in sync. The gate is not optional — without it
+-- `vim.lsp.enable` falls back to single-file mode when no marker is found and
+-- would spawn the server for every YAML file on the system.
+vim.lsp.config("ansiblels", {
+  filetypes = { "yaml", "yaml.ansible" },
+  root_dir = function(bufnr, on_dir)
+    local root = vim.fs.root(bufnr, { "ansible.cfg", ".ansible-lint", "site.yml", "playbooks" })
+    if root then
+      on_dir(root)
+    end
+  end,
 })
 
 vim.lsp.config("lua_ls", {
@@ -127,7 +178,7 @@ vim.lsp.enable({
   "gopls",
   "basedpyright",
   "ruff",
-  "ltex_plus",
+  "harper_ls",
   "marksman",
   "lua_ls",
   "bashls",
