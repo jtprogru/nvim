@@ -146,7 +146,7 @@
 |---|---|
 | `K` | Hover (документация) |
 | `gK` | Signature help |
-| `gd` | Go to definition |
+| `gd` | Go to definition (в TS/JS — go to **source** definition, мимо `.d.ts`) |
 | `gD` | Go to declaration |
 | `gr` | References (через fzf-lua) |
 | `gI` | Go to implementations |
@@ -156,9 +156,13 @@
 | `<leader>cf` (n + v) | Format (через conform) |
 | `<leader>cs` | LSP-символы в буфере |
 | `<leader>cS` | LSP-символы по workspace |
+| `<leader>ci` | Incoming calls (кто зовёт) |
+| `<leader>co` | Outgoing calls (кого зовёт) |
 | `<leader>cl` | LSP-диагностика (`:checkhealth vim.lsp`) |
 
 Inlay hints автоматически включаются для серверов, которые их поддерживают. Toggle: `<leader>uh`.
+
+Иерархию вызовов (`<leader>ci` / `<leader>co`) плоский список ссылок не заменяет: внутри пикера `<CR>` проваливается на уровень глубже. В TypeScript `gd` подменяется на source definition только там, где привязан vtsls; если пакет не публикует исходники, он молча откатывается на обычный definition и приводит в `.d.ts`.
 
 ---
 

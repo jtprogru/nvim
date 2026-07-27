@@ -1,4 +1,12 @@
 require("conform").setup({
+  formatters = {
+    -- Without a prettier config in the project, prettierd formats with its own
+    -- defaults and silently reflows files that never asked for it. `require_cwd`
+    -- makes it skip such projects (conform's prettierd `cwd` matches only a real
+    -- .prettierrc* / prettier.config.* or a package.json with a "prettier" key),
+    -- and formatting falls back to the LSP.
+    prettierd = { require_cwd = true },
+  },
   format_on_save = function(bufnr)
     if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
       return
@@ -18,6 +26,10 @@ require("conform").setup({
     terraform = { "terraform_fmt" },
     ["terraform-vars"] = { "terraform_fmt" },
     hcl = { "terraform_fmt" },
+    typescript = { "prettierd" },
+    typescriptreact = { "prettierd" },
+    javascript = { "prettierd" },
+    javascriptreact = { "prettierd" },
   },
 })
 

@@ -88,6 +88,93 @@ vim.lsp.config("ruff", {
   end,
 })
 
+-- ── TypeScript / JavaScript ──
+-- vtsls over ts_ls: same tsserver underneath, but it exposes
+-- `typescript.goToSourceDefinition` (see the `gd` override at the bottom of this
+-- file), updates imports when a file is renamed, and takes VS Code's
+-- `typescript.*` settings verbatim. Enabling both would mean two tsservers.
+--
+-- root_dir is deliberately not overridden: the one shipped by nvim-lspconfig
+-- anchors on the package-manager lockfile and lets vtsls resolve the per-package
+-- tsconfig itself, so a monorepo gets ONE server instead of one per workspace.
+-- It also refuses to start next to a deno.json.
+local ts_inlay_hints = {
+  -- `literals` only: naming every argument, including the ones already passed as
+  -- named variables, buries the line in hints.
+  parameterNames = { enabled = "literals" },
+  parameterTypes = { enabled = true },
+  variableTypes = { enabled = true, suppressWhenTypeMatchesName = true },
+  propertyDeclarationTypes = { enabled = true },
+  functionLikeReturnTypes = { enabled = true },
+  enumMemberValues = { enabled = true },
+}
+
+vim.lsp.config("vtsls", {
+  settings = {
+    -- tsserver ships with inlay hints off, so the `inlay_hint.enable` in LspAttach
+    -- below has nothing to show until they're requested here.
+    typescript = {
+      inlayHints = ts_inlay_hints,
+      updateImportsOnFileMove = { enabled = "always" },
+      suggest = { completeFunctionCalls = true },
+    },
+    javascript = { inlayHints = ts_inlay_hints },
+    vtsls = {
+      -- Use the TypeScript from node_modules, not the one bundled with vtsls —
+      -- otherwise diagnostics disagree with what `tsc` in CI reports.
+      autoUseWorkspaceTsdk = true,
+      experimental = { completion = { enableServerSideFuzzyMatch = true } },
+      -- Default heap is ~3 GiB. A large monorepo hits it and tsserver starts
+      -- dropping requests instead of erroring, which reads as "LSP got slow".
+      tsserver = { maxTsServerMemory = 8192 },
+    },
+  },
+})
+
+-- eslint-lsp rather than eslint in nvim-lint: the server gives code actions and
+-- fix-all, a linter integration would only give diagnostics. It runs the eslint
+-- from the project's node_modules and stays off in repos without an eslint config.
+--
+-- Capture the shipped on_attach BEFORE overriding — after `vim.lsp.config()` the
+-- field reads back as our own function and wrapping it would recurse. It defines
+-- the buffer-local :LspEslintFixAll used below.
+local eslint_on_attach = vim.lsp.config.eslint.on_attach
+local eslint_fix_group = vim.api.nvim_create_augroup("eslint_fix_on_save", { clear = true })
+
+vim.lsp.config("eslint", {
+  on_attach = function(client, bufnr)
+    if eslint_on_attach then
+      eslint_on_attach(client, bufnr)
+    end
+    vim.api.nvim_clear_autocmds({ group = eslint_fix_group, buffer = bufnr })
+    vim.api.nvim_create_autocmd("BufWritePre", {
+      group = eslint_fix_group,
+      buffer = bufnr,
+      callback = function()
+        -- Same switches conform's format_on_save honours, so <leader>uf and
+        -- <leader>uF silence the formatter and eslint --fix in one move.
+        if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+          return
+        end
+        vim.cmd("LspEslintFixAll")
+      end,
+    })
+  end,
+})
+
+-- jsonls without schemas is a syntax checker and nothing more. The schemastore.org
+-- catalog is what makes tsconfig.json, package.json and friends complete and
+-- validate field by field.
+local ok_schemastore, schemastore = pcall(require, "schemastore")
+vim.lsp.config("jsonls", {
+  settings = {
+    json = {
+      schemas = ok_schemastore and schemastore.json.schemas() or nil,
+      validate = { enable = true },
+    },
+  },
+})
+
 -- harper-ls replaced ltex-ls here. ltex is LanguageTool on a JVM: 1405 MiB RSS
 -- and 3657 ms to ready, against 165 MiB and 110 ms for harper's static binary.
 --
@@ -178,6 +265,9 @@ vim.lsp.enable({
   "gopls",
   "basedpyright",
   "ruff",
+  "vtsls",
+  "eslint",
+  "jsonls",
   "harper_ls",
   "marksman",
   "lua_ls",
@@ -190,6 +280,31 @@ vim.lsp.enable({
 -- rust-analyzer is started by rustaceanvim — do NOT enable it here.
 
 -- ────────────────────────────── LSP-attach keymaps ──────────────────────────────
+
+-- In TypeScript `gd` on anything from node_modules lands in a generated .d.ts.
+-- vtsls exposes `typescript.goToSourceDefinition`, which resolves the same symbol
+-- in the published source when the package ships it. Falls back to the plain
+-- definition request when it doesn't (or when the symbol really is a type).
+local function goto_source_definition(client, bufnr)
+  local params = vim.lsp.util.make_position_params(0, client.offset_encoding)
+  client:exec_cmd({
+    command = "typescript.goToSourceDefinition",
+    arguments = { params.textDocument.uri, params.position },
+  }, { bufnr = bufnr }, function(err, result)
+    if err or type(result) ~= "table" or vim.tbl_isempty(result) then
+      return vim.lsp.buf.definition()
+    end
+    if #result == 1 then
+      return vim.lsp.util.show_document(result[1], client.offset_encoding, { focus = true, reuse_win = true })
+    end
+    vim.fn.setqflist({}, " ", {
+      title = "Source definitions",
+      items = vim.lsp.util.locations_to_items(result, client.offset_encoding),
+    })
+    require("fzf-lua").quickfix()
+  end)
+end
+
 vim.api.nvim_create_autocmd("LspAttach", {
   group = vim.api.nvim_create_augroup("lsp_attach", { clear = true }),
   callback = function(ev)
@@ -213,11 +328,24 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "<leader>cS", function()
       require("fzf-lua").lsp_workspace_symbols()
     end, "Symbols (workspace)")
+    -- Call hierarchy: "who calls this" walked recursively, which a flat reference
+    -- list can't answer. Both drill down with <CR> inside the picker.
+    map("n", "<leader>ci", function()
+      require("fzf-lua").lsp_incoming_calls()
+    end, "Incoming calls")
+    map("n", "<leader>co", function()
+      require("fzf-lua").lsp_outgoing_calls()
+    end, "Outgoing calls")
     map("n", "<leader>cl", "<cmd>checkhealth vim.lsp<cr>", "LSP info")
 
     local client = vim.lsp.get_client_by_id(ev.data.client_id)
     if client and client:supports_method("textDocument/inlayHint", ev.buf) then
       vim.lsp.inlay_hint.enable(true, { bufnr = ev.buf })
+    end
+    if client and client.name == "vtsls" then
+      map("n", "gd", function()
+        goto_source_definition(client, ev.buf)
+      end, "Go to source definition")
     end
   end,
 })

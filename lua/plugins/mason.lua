@@ -13,11 +13,14 @@ require("mason-tool-installer").setup({
     "bash-language-server",
     "basedpyright",
     "gopls",
+    "eslint-lsp",
     "harper-ls",
+    "json-lsp",
     "lua-language-server",
     "marksman",
     "ruff",
     "terraform-ls",
+    "vtsls", -- TypeScript / JavaScript (not ts_ls — see lua/config/lsp.lua)
     "yaml-language-server",
     -- Linters
     "ansible-lint",
@@ -33,6 +36,7 @@ require("mason-tool-installer").setup({
     -- Formatters
     "gofumpt",
     "goimports",
+    "prettierd",
     "shfmt",
     "stylua",
     "taplo",

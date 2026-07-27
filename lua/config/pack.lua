@@ -49,6 +49,7 @@ vim.pack.add({
 
   -- LSP server configs
   { src = "https://github.com/neovim/nvim-lspconfig" },
+  { src = "https://github.com/b0o/SchemaStore.nvim" }, -- JSON schema catalog for jsonls
 
   -- testing (neotest)
   { src = "https://github.com/nvim-neotest/neotest" },

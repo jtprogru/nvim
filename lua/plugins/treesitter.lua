@@ -28,6 +28,8 @@ local parsers = {
   "hcl",
   "html",
   "ini",
+  "javascript",
+  "jsdoc", -- injected into /** */ blocks in .ts/.js — without it they stay plain comments
   "json",
   "lua",
   "luadoc",

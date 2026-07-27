@@ -1,6 +1,6 @@
 # nvim — конфиг для Neovim 0.12.x без LazyVim и без lazy.nvim
 
-![Lua LoC](https://img.shields.io/badge/lua-2963%20LoC-blueviolet?logo=lua)
+![Lua LoC](https://img.shields.io/badge/lua-3062%20LoC-blueviolet?logo=lua)
 
 Плагины ставит нативный `vim.pack`, LSP поднимается через `vim.lsp.config`/`vim.lsp.enable`. Никакого фреймворка сверху: всё, что делает конфиг, лежит в этом репозитории и читается за один вечер.
 
@@ -207,9 +207,17 @@ rm -rf ~/.config/nvim ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim
 
 ## Языки и инструменты
 
-**LSP-серверы** включены в [`lua/config/lsp.lua`](lua/config/lsp.lua): gopls, basedpyright, ruff, lua_ls, bashls, yamlls, taplo, marksman, harper_ls, ansiblels, terraformls. rust-analyzer поднимает rustaceanvim — включать его через `vim.lsp.enable` нельзя, будет два инстанса.
+**LSP-серверы** включены в [`lua/config/lsp.lua`](lua/config/lsp.lua): gopls, basedpyright, ruff, vtsls, eslint, jsonls, lua_ls, bashls, yamlls, taplo, marksman, harper_ls, ansiblels, terraformls. rust-analyzer поднимает rustaceanvim — включать его через `vim.lsp.enable` нельзя, будет два инстанса.
 
 Свои настройки серверов: gopls с inlay hints, расширенными analyses и codelenses; basedpyright в режиме `standard` с inlay hints; ruff без hover (не перебивает basedpyright); marksman на `markdown.mdx` и `mdx`.
+
+**TypeScript — vtsls, а не ts_ls.** Внутри тот же tsserver, но vtsls отдаёт команду `typescript.goToSourceDefinition`, и на неё повешен `gd` (только в буферах, где привязан vtsls). Обычный `textDocument/definition` на импорте из node_modules приводит в сгенерированный `.d.ts`; source-definition находит то же самое в исходнике, если пакет его публикует, и откатывается на обычный definition, когда не находит. Включать ts_ls и vtsls одновременно нельзя — будет два tsserver'а.
+
+`root_dir` намеренно не переопределён: тот, что везёт nvim-lspconfig, цепляется за lock-файл пакетного менеджера, а tsconfig по пакетам vtsls разбирает сам. В монорепе это один сервер на всё дерево вместо одного на воркспейс. Рядом с `deno.json` он не стартует вовсе. Из настроек: inlay hints (у tsserver они по умолчанию выключены, так что автовключение в `LspAttach` без этого показывало бы пустоту), `updateImportsOnFileMove`, `autoUseWorkspaceTsdk` (TypeScript берётся из node_modules проекта, иначе диагностика расходится с `tsc` в CI) и `maxTsServerMemory = 8192` — дефолтные ~3 ГиБ большая монорепа выбирает, после чего tsserver начинает молча ронять запросы, и это читается как «LSP затупил».
+
+**eslint через LSP, а не через nvim-lint.** Сервер даёт не только диагностику, но и code actions с fix-all, и подхватывает eslint из node_modules проекта. В репозиториях без конфига eslint он просто не поднимается. На `BufWritePre` вызывается `:LspEslintFixAll`, и этот автокоманд смотрит на те же `vim.g.disable_autoformat` / `vim.b.disable_autoformat`, что и conform, — `<leader>uf` и `<leader>uF` глушат формат и eslint --fix разом. Штатный `on_attach` из nvim-lspconfig при этом сохраняется (он и создаёт `:LspEslintFixAll`), поэтому он захватывается в переменную **до** `vim.lsp.config("eslint", ...)`: после вызова поле читается уже как наша собственная функция, и обёртка ушла бы в рекурсию.
+
+**jsonls с каталогом схем.** Без схем это проверка синтаксиса и не более. `SchemaStore.nvim` отдаёт каталог schemastore.org — 1384 схемы, включая tsconfig.json, package.json и eslintrc; в tsconfig появляется автодополнение ключей `compilerOptions` и валидация значений по типам.
 
 **Проверка текста — harper_ls, а не ltex.** ltex-ls это LanguageTool на JVM, и в замерах он оказался самым дорогим сервером в конфиге. harper-ls — статический бинарник на Rust:
 
@@ -243,7 +251,9 @@ rm -rf ~/.config/nvim ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim
 
 Предупреждение про position encodings тоже никуда не денется: harper-ls отдаёт `utf-16` независимо от того, что ему предлагают (проверено — если объявить только `utf-8`, он всё равно отвечает `utf-16`), а obsidian-ls работает в `utf-8` и поднимается мимо `vim.lsp.config`, так что рычага на него нет. Neovim пересчитывает позиции по `offset_encoding` каждого клиента отдельно, так что на практике это не ломается: прогон с правками по крупным русским заметкам не дал ни одной ошибки декодирования.
 
-**Форматтеры** ([`conform.lua`](lua/plugins/conform.lua)): stylua, ruff_format + ruff_organize_imports, shfmt, goimports + gofumpt, markdownlint-cli2, jq, yamlfmt, taplo, terraform_fmt. `<leader>cf` форматирует, `<leader>uf` / `<leader>uF` глушат автоформат глобально / для буфера.
+**Форматтеры** ([`conform.lua`](lua/plugins/conform.lua)): stylua, ruff_format + ruff_organize_imports, shfmt, goimports + gofumpt, markdownlint-cli2, jq, yamlfmt, taplo, terraform_fmt, prettierd (ts/tsx/js/jsx). `<leader>cf` форматирует, `<leader>uf` / `<leader>uF` глушат автоформат глобально / для буфера.
+
+У prettierd стоит `require_cwd = true`. Без него он в проекте без конфига prettier форматирует по своим умолчаниям и тихо переписывает файлы, которые об этом не просили; с ним conform пропускает такие проекты (его `cwd` для prettierd ищет настоящий `.prettierrc*` / `prettier.config.*` либо ключ `"prettier"` в package.json) и форматирование уходит в LSP.
 
 **Линтеры** ([`lint.lua`](lua/plugins/lint.lua)) — security-сканеры прямо в диагностике, по `BufReadPost` и `BufWritePost`: bandit (python), hadolint + trivy (dockerfile), trivy (terraform/hcl/yaml), golangci-lint (go). Ручной прогон — `<leader>cx`. Намеренно не на `InsertLeave`: trivy и golangci-lint форкают процесс на каждый вызов.
 
@@ -253,7 +263,9 @@ rm -rf ~/.config/nvim ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim
 
 Используется `nvim-treesitter` ветки `main` с синхронной доустановкой парсеров на старте. [`lua/plugins/treesitter.lua`](lua/plugins/treesitter.lua) сверяет список нужных парсеров с `stdpath("data") .. "/site/parser/"` и компилирует недостающие через `tree-sitter` CLI, блокируя старт. Один раз ~1 минута, дальше моментально.
 
-Текущий набор: bash, c, cpp, css, diff, dockerfile, go (+ gomod/gosum/gotmpl/gowork), helm, hcl, html, ini, json, lua (+ luadoc/luap), make, markdown (+ markdown_inline), python, query, regex, rust, sql, terraform, toml, tsx, typescript, vim, vimdoc, yaml.
+Текущий набор: bash, c, cpp, css, diff, dockerfile, go (+ gomod/gosum/gotmpl/gowork), helm, hcl, html, ini, javascript, jsdoc, json, lua (+ luadoc/luap), make, markdown (+ markdown_inline), python, query, regex, rust, sql, terraform, toml, tsx, typescript, vim, vimdoc, yaml.
+
+`jsdoc` тут не для JavaScript: он инжектится в блоки `/** */` и в `.ts` тоже, без него это просто серый комментарий.
 
 Добавить парсер: дописать в `parsers = {...}`, перезапустить nvim — он сам докомпилит недостающее.
 
