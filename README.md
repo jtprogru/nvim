@@ -1,221 +1,251 @@
-# nvim-new — конфиг для Neovim 0.12.x без LazyVim
+# nvim — конфиг для Neovim 0.12.x без LazyVim и без lazy.nvim
 
-![Lua LoC](https://img.shields.io/badge/lua-2076%20LoC-blueviolet?logo=lua)
+![Lua LoC](https://img.shields.io/badge/lua-2078%20LoC-blueviolet?logo=lua)
 
-Запуск параллельно со старым: `NVIM_APPNAME=nvim-new nvim` (есть alias `vn` в `~/.aliases`).
+Плагины ставит нативный `vim.pack`, LSP поднимается через `vim.lsp.config`/`vim.lsp.enable`. Никакого фреймворка сверху: всё, что делает конфиг, лежит в этом репозитории и читается за один вечер.
+
+Полная шпаргалка по клавишам — [`KEYMAPS.md`](KEYMAPS.md). Внутри nvim авторитативный источник это `:WhichKey` (или подержать `<leader>`) и `<leader>sk` — fuzzy-поиск по всем активным маппингам.
+
+## Установка
+
+### Требования
+
+Обязательно:
+
+| Что | Зачем | macOS |
+|---|---|---|
+| Neovim >= 0.12 | `vim.pack`, `vim.lsp.config`, нативный лок-файл | `brew install neovim` |
+| git, curl, unzip | клон плагинов, установка пакетов mason | идут из коробки / `brew install curl unzip` |
+| C-компилятор | сборка treesitter-парсеров | Xcode CLT: `xcode-select --install` |
+| Nerd Font в терминале | иконки mini.icons / bufferline / statusline | `brew install --cask font-jetbrains-mono-nerd-font` |
+
+Сильно желательно (иначе часть биндингов будет мимо):
+
+| Что | Зачем | macOS |
+|---|---|---|
+| ripgrep, fd | поиск в fzf-lua (`<leader>/`, `<leader><space>`) | `brew install ripgrep fd` |
+| lazygit | `<leader>gg` | `brew install lazygit` |
+| go, node, python3, cargo | mason ставит часть пакетов их тулчейнами | `brew install go node python cargo` |
+
+Опционально, под конкретные сценарии:
+
+| Что | Зачем |
+|---|---|
+| `pngpaste` | вставка картинок из буфера обмена, `<leader>P` (img-clip) |
+| `quarto` CLI | `<leader>q*` — preview/render Quarto-документов |
+| tmux или WezTerm | сквозная навигация `<C-h/j/k/l>` между панелями и сплитами (smart-splits) |
+| Obsidian vault | `<leader>o*`; путь к vault прописан в [`lua/plugins/obsidian.lua`](lua/plugins/obsidian.lua) и его надо поправить под себя |
+
+### Быстрый старт
+
+```bash
+# 1. Бэкап того, что уже лежит (пропусти, если ставишь с нуля)
+mv ~/.config/nvim{,.bak}
+mv ~/.local/share/nvim{,.bak}
+mv ~/.local/state/nvim{,.bak}
+mv ~/.cache/nvim{,.bak}
+
+# 2. Клон
+git clone git@github.com:jtprogru/nvim.git ~/.config/nvim
+# или по https: git clone https://github.com/jtprogru/nvim.git ~/.config/nvim
+
+# 3. Python-провайдер (нужен для python-плагинов; можно пропустить)
+python3 -m venv ~/.config/nvim/venv
+~/.config/nvim/venv/bin/pip install pynvim
+
+# 4. Первый старт
+nvim
+```
+
+`venv/` в `.gitignore`, так что он не улетит в репозиторий. Если venv нет, `lua/config/options.lua` просто не выставит `python3_host_prog` и Neovim возьмёт python3 с PATH.
+
+### Примерка рядом с существующим конфигом
+
+Проще всего не трогать текущий `~/.config/nvim`, а поставить рядом через `NVIM_APPNAME` — под ним разъезжаются и конфиг, и данные, и state, и кэш, и лок-файл:
+
+```bash
+git clone git@github.com:jtprogru/nvim.git ~/.config/nvim-jt
+NVIM_APPNAME=nvim-jt nvim
+```
+
+Удобно завести алиас: `alias vn='NVIM_APPNAME=nvim-jt nvim'`. Конфиг нигде не хардкодит `~/.config/nvim` — все пути идут от `stdpath()`, так что под любым `NVIM_APPNAME` он работает одинаково.
+
+### Что происходит на первом старте
+
+1. **`vim.pack` клонирует 37 плагинов** — одним блокирующим шагом, на минуту-полторы. Ревизии берутся из `nvim-pack-lock.json`, так что ты получаешь ровно тот срез, который закоммичен.
+2. **mason через 3 секунды в фоне начинает ставить внешние инструменты** — LSP-серверы, линтеры, форматтеры, дебаг-адаптеры (список в [`lua/plugins/mason.lua`](lua/plugins/mason.lua)). Прогресс виден в `:Mason`.
+3. **nvim-treesitter пытается собрать парсеры** — и на совсем чистой машине спотыкается: `tree-sitter` CLI ещё ставится мейсоном. Конфиг честно скажет это в notify.
+
+Отсюда правило чистой установки: **дождись, пока mason доставит всё (`:Mason`, все ✓), и перезапусти nvim**. На втором старте treesitter соберёт парсеры (одноразово, ~1 минута), и дальше запуски мгновенные.
+
+Если ждать не хочется — `brew install tree-sitter` до первого старта, тогда парсеры соберутся сразу.
+
+### Проверка, что всё встало
+
+```vim
+:checkhealth              " общая диагностика
+:checkhealth vim.pack     " плагины
+:checkhealth vim.lsp      " какие серверы подцепились к буферу
+:Mason                    " статус внешних инструментов
+:PackStatus               " плагины + доступные обновления (pack-ui)
+```
+
+Хороший смоук-тест руками: открой `.go`/`.py`/`.lua` файл и проверь `K`, `gd`, `<leader>ca`. Если не работает — почти всегда дело не в кеймапах, а в том, что LSP-сервер не установлен или не запустился; смотри `:Mason` и `:checkhealth vim.lsp`.
+
+Из терминала, без запуска UI:
+
+```bash
+make smoke   # загрузить весь конфиг headless и упасть на первой ошибке
+```
+
+### Обновление
+
+Плагины (`pack-ui.nvim` поверх `vim.pack`):
+
+```vim
+:PackStatus       " <leader>ps — что обновилось, с чейнджлогом
+:PackUpdateAll    " <leader>pU — обновить всё
+:PackUpdate <name>
+```
+
+После обновления `nvim-pack-lock.json` меняется — закоммить его, это часть конфига. Откатиться: `git checkout HEAD -- nvim-pack-lock.json`, затем `:lua vim.pack.update(nil, { target = 'lockfile' })`.
+
+Внешние инструменты — `:Mason` (`U` — обновить всё). Автообновление намеренно выключено, чтобы старт не зависел от сети.
+
+Treesitter-парсеры — `:lua require("nvim-treesitter").update()`.
+
+### Удаление
+
+```bash
+rm -rf ~/.config/nvim ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim
+```
+
+Под `NVIM_APPNAME=foo` те же четыре пути, только с `foo` вместо `nvim`.
 
 ## Стек
 
-| Слой | Чем заменено | Что отказались |
+| Слой | Чем закрыто | Вместо чего |
 |---|---|---|
-| Plugin manager | `vim.pack` (нативный, 0.12) | lazy.nvim |
-| LSP | `vim.lsp.config` + `vim.lsp.enable` (0.11+) | nvim-lspconfig |
+| Plugin manager | `vim.pack` (нативный, 0.12) + `pack-ui.nvim` | lazy.nvim |
+| LSP | `vim.lsp.config` + `vim.lsp.enable` (0.11+), конфиги из nvim-lspconfig | ручной lspconfig-сетап |
 | Completion | blink.cmp | nvim-cmp / luasnip |
 | Picker | fzf-lua | snacks.picker / telescope |
 | Explorer | mini.files | neo-tree |
 | Statusline | mini.statusline | lualine |
+| Tabline | bufferline.nvim | — |
+| Cmdline / messages | noice.nvim | — |
 | Misc | mini.surround / ai / pairs / comment / bufremove / icons | nvim-surround, ts-autotag, Comment.nvim |
-| Git | gitsigns + lazygit.nvim | (то же) |
-| Treesitter | nvim-treesitter | (то же) |
-| Formatting | conform.nvim | LazyVim-овский конформ |
-| Rust | rustaceanvim | (то же) |
-| Markdown | render-markdown + mdx.nvim + img-clip | (то же) |
-| Obsidian | obsidian.nvim + custom templater | (то же) |
-| Quarto | quarto-nvim + otter.nvim | (то же) |
-| Tools | mason.nvim (опционально, без auto-install) | mason-lspconfig |
-
-## Что сохранено из старого конфига
-
-- **Кастомные кеймапы** (`KEYMAPS.md` → "🔧"):
-  - `<Tab>` / `<S-Tab>` — переключение буферов
-  - `<C-h/j/k/l>` — smart-splits (Tmux/WezTerm-aware)
-  - `<leader>gj` — следующий git-hunk (+ `<leader>gk` prev)
-  - `<leader>o*` — Obsidian + Templater (все 18 биндингов)
-  - `<leader>q[pca]` — Quarto preview / close / activate
-  - `<leader>P` — paste image
-  - `<C-y>` — blink.cmp accept
-- **Опции**: `colorcolumn=120`, `scrolloff=5`, spell `ru_ru` + `en_us`, helm filetype, gotmpl, python3 host из старого venv.
-- **Autocmds**: macOS dark/light sync.
-- **Gitsigns**: твои custom signs, blame на eol с форматом `<author> (<date>) - <summary>`.
-- **LSP-настройки**: gopls (hints + analyses + codelenses), basedpyright (standard, inlay), ruff (без hover), ltex-plus (ru-RU), marksman (markdown.mdx + mdx), lua_ls.
-- **Тема**: «Мишка на сервере» — бренд-слой поверх catppuccin (Latte на свету, Macchiato в темноте, акцент Sapphire). Палитра из дизайн-кода блога jtprog.ru, см. `lua/plugins/mishka.lua`.
-- **Templater**: `lua/util/templater.lua` скопирован как есть.
-
-## Что отвалилось от LazyVim (вернуть по вкусу)
-
-- **Dashboard / start screen** (snacks dashboard).
-- **Buffer-line / tabline** — поставь `akinsho/bufferline.nvim`, если нужны "вкладки" сверху.
-- **Trouble.nvim** — `<leader>xx` и т.п. Заменено диагностиками + fzf-lua. Если хочешь панель — `folke/trouble.nvim` в `plugins.lua`.
-- **Flash.nvim** (`s`/`S`) — добавь `folke/flash.nvim` при желании.
-- **Noice.nvim** — нет.
-- **Sessions** (`<leader>qs`, `<leader>ql`) — `folke/persistence.nvim` или `rmagatti/auto-session`.
-- **DAP** (`<leader>d*`) — `mfussenegger/nvim-dap` + ui по желанию.
-- **none-ls** (внешние линтеры) — текущие LSP закрывают почти всё; для остального `mfussenegger/nvim-lint`.
-- **Lazy-loading плагинов**: vim.pack грузит всё eager. Для ft-плагинов (obsidian, quarto, mdx, render-md) ft-фильтры внутри плагина срабатывают; стартап-задержка минимальная — измерь `nvim --startuptime /tmp/nv.log` перед оптимизацией.
-- **`<leader>?`** (recent keymaps) — у snacks.picker, в fzf-lua нет аналога.
-
-## Первый запуск
-
-```bash
-vn  # alias из ~/.aliases
-```
-
-vim.pack клонирует все плагины при первом старте (один блокирующий вызов). Это нормально.
-
-Дальше, по необходимости:
-
-```vim
-:checkhealth                                  " общая проверка
-:checkhealth vim.lsp                          " какие LSP подцепились
-:checkhealth vim.pack
-:Mason                                        " открыть UI mason
-:TSUpdate                                     " обновить TS-парсеры
-```
-
-Чтобы поставить пачку инструментов одной командой:
-
-```vim
-:MasonInstall ansible-language-server ansible-lint ast-grep bash-language-server codelldb delve gh gitleaks gofumpt goimports golangci-lint gomodifytags gopls gotests gotestsum impl ltex-ls-plus lua-language-server markdown-toc markdownlint-cli2 marksman ruff basedpyright debugpy iferr semgrep shellcheck shfmt stylua taplo tfsec tree-sitter-cli uv yaml-language-server
-```
+| Git | gitsigns + lazygit.nvim | — |
+| Treesitter | nvim-treesitter (ветка `main`) | — |
+| Formatting | conform.nvim | none-ls |
+| Linting | nvim-lint (security-сканеры как диагностика) | none-ls |
+| Tests | neotest (+ golang / python / plenary адаптеры) | — |
+| Debug | nvim-dap + dap-ui + virtual-text (+ go / python / codelldb) | — |
+| Rust | rustaceanvim (rust-analyzer поднимает он, не `vim.lsp.enable`) | — |
+| Markdown | render-markdown + mdx.nvim + img-clip | — |
+| Obsidian | obsidian.nvim + свой Templater | — |
+| Quarto | quarto-nvim + otter.nvim | — |
+| Tools | mason.nvim + mason-tool-installer | mason-lspconfig |
+| Тема | «Мишка на сервере» — бренд-слой поверх catppuccin | — |
 
 ## Структура
 
 ```
-nvim-new/
-├── init.lua                # entry: loads in fixed order
+~/.config/nvim/
+├── init.lua                    # entry: фиксированный порядок загрузки
 ├── lua/
 │   ├── config/
-│   │   ├── options.lua     # vim.opt, filetype, diagnostic
-│   │   ├── pack.lua        # vim.pack.add — what to install (URLs only)
-│   │   ├── keymaps.lua     # daily-driver keymaps (LSP/picker/git/UI)
-│   │   ├── autocmds.lua    # macOS bg sync, yank hl, spell-on-md
-│   │   └── lsp.lua         # vim.lsp.config + LspAttach keymaps
-│   ├── plugins/            # per-plugin setup (one file per plugin)
-│   │   ├── init.lua        # explicit load order
-│   │   ├── mason.lua       # mason + mason-tool-installer (ensure_installed)
-│   │   ├── mini.lua        # mini.* family setup (icons/files/statusline/…)
-│   │   ├── mishka.lua      # бренд-тема поверх catppuccin
-│   │   ├── which-key.lua
-│   │   ├── bufferline.lua
-│   │   ├── noice.lua
-│   │   ├── fzf-lua.lua
-│   │   ├── smart-splits.lua
-│   │   ├── gitsigns.lua
-│   │   ├── blink.lua
-│   │   ├── conform.lua
-│   │   ├── render-md.lua
-│   │   ├── img-clip.lua
-│   │   ├── obsidian.lua    # obsidian + Templater commands + <leader>o*
-│   │   ├── quarto.lua      # quarto + filetype-local <leader>q*
-│   │   └── rustaceanvim.lua
+│   │   ├── options.lua         # vim.opt, filetype, diagnostic, python-провайдер
+│   │   ├── pack.lua            # vim.pack.add — ЧТО ставим (единственное место с URL'ами)
+│   │   ├── keymaps.lua         # daily-driver биндинги (буферы/окна/терминал/git/UI)
+│   │   ├── autocmds.lua        # macOS dark/light sync, yank hl, spell для md, trailing ws
+│   │   ├── lsp.lua             # vim.lsp.config + enable + LspAttach-кеймапы
+│   │   └── statusline.lua      # mini.statusline
+│   ├── plugins/                # КАК настроен каждый плагин, один файл на плагин
+│   │   ├── init.lua            # явный порядок загрузки
+│   │   ├── mason.lua           # mason + ensure_installed
+│   │   ├── treesitter.lua      # список парсеров + синхронная доустановка
+│   │   ├── mini.lua            # mini.* (icons/files/surround/ai/pairs/comment/bufremove)
+│   │   ├── mishka.lua          # бренд-тема поверх catppuccin
+│   │   ├── blink.lua           # completion
+│   │   ├── conform.lua         # форматтеры + :Format, :FormatToggle
+│   │   ├── lint.lua            # nvim-lint: security-сканеры как диагностика
+│   │   ├── dap.lua             # nvim-dap + ui + virtual-text + go/python/codelldb
+│   │   ├── neotest.lua         # neotest + адаптеры
+│   │   ├── obsidian.lua        # obsidian + Templater-команды + <leader>o*
+│   │   ├── quarto.lua          # quarto + буферные <leader>q*
+│   │   ├── pack-ui.lua         # :PackStatus / :PackUpdate / :PackUpdateAll
+│   │   ├── which-key.lua, bufferline.lua, noice.lua, fzf-lua.lua
+│   │   ├── smart-splits.lua, gitsigns.lua, render-md.lua
+│   │   └── img-clip.lua, rustaceanvim.lua
 │   └── util/
-│       └── templater.lua   # Obsidian Templater (<% tp.* %>) engine
+│       ├── templater.lua       # движок Obsidian Templater (<% tp.* %>)
+│       └── python.lua          # резолв интерпретатора: $VIRTUAL_ENV → .venv → brew
+├── tests/                      # plenary busted + smoke
+├── .githooks/pre-commit        # обновляет LoC-бейдж в README (нужен tokei)
+├── .github/workflows/ci.yml    # stylua --check, selene, unit-тесты
+├── Makefile                    # smoke / test / lint / fmt
 ├── KEYMAPS.md
-├── README.md
-└── nvim-pack-lock.json     # vim.pack lockfile (commit it)
+└── nvim-pack-lock.json         # лок-файл vim.pack — под гитом, коммить его
 ```
 
-**Принципы**:
-- `config/pack.lua` — **что** установлено, единственное место с URL'ами плагинов.
-- `plugins/<name>.lua` — **как** настроен конкретный плагин (опции, команды, плагин-специфичные кеймапы).
-- `config/keymaps.lua` — daily-driver кеймапы, не привязанные к одному плагину (буферы, окна, LSP-навигация, UI-тоглы).
-- Чтобы добавить плагин: 1) дописать URL в `pack.lua`, 2) создать `plugins/<name>.lua`, 3) добавить имя в `order` в `plugins/init.lua`.
-- Чтобы удалить плагин: обратное — удалить из `pack.lua`, удалить файл, убрать из `order`. Один файл = одна зона риска.
+Принципы:
 
-## Сравнение с прошлой версией (LazyVim)
+- `config/pack.lua` — **что** установлено. Единственное место с URL'ами.
+- `plugins/<name>.lua` — **как** настроен конкретный плагин: опции, команды, его собственные кеймапы.
+- `config/keymaps.lua` — то, что не привязано к одному плагину.
+- Добавить плагин: URL в `pack.lua` → создать `plugins/<name>.lua` → дописать имя в `order` в `plugins/init.lua`.
+- Удалить — обратное, те же три шага. Один плагин = один файл = одна зона риска.
 
-| | LazyVim | nvim-new |
-|---|---|---|
-| Файлов своих | 24 lua | 6 lua |
-| Строк своих | ~1100 | ~700 |
-| Плагинов в lock | 64 | ~18 (+ зависимости через plenary, web-devicons) |
-| Стартап (примерно) | 150-300 мс | < 100 мс ожидается |
-| Обновления | LazyVim релизы могут ломать конфиг | только то, что сам обновил |
+Порядок в `plugins/init.lua` не косметический: mason идёт первым (кладёт свой `bin` в PATH, treesitter оттуда берёт `tree-sitter`), treesitter вторым (блокирует старт на доустановке), blink до `config.lsp` (отдаёт capabilities), dap до neotest (`<leader>td` ходит через dap-стратегию).
 
-## Шпаргалки
+## Языки и инструменты
 
-### LSP-навигация по коду (`gd` / `gr` / `K` и т.д.)
+**LSP-серверы** включены в [`lua/config/lsp.lua`](lua/config/lsp.lua): gopls, basedpyright, ruff, lua_ls, bashls, yamlls, taplo, marksman, ltex_plus (ru-RU, словари ru-RU и en-US), ansiblels, terraformls. rust-analyzer поднимает rustaceanvim — включать его через `vim.lsp.enable` нельзя, будет два инстанса.
 
-Привязки активируются автоматически когда LSP-сервер подключается к буферу (через `LspAttach` autocmd в `lua/config/lsp.lua`). Если они не работают — LSP-сервер просто не запущен. Открой `:Mason`, проверь что нужный сервер установлен (✓), потом перезапусти nvim.
+Свои настройки серверов: gopls с inlay hints, расширенными analyses и codelenses; basedpyright в режиме `standard` с inlay hints; ruff без hover (не перебивает basedpyright); marksman на `markdown.mdx` и `mdx`.
 
-| Сочетание | Действие |
-|---|---|
-| `K` | Hover (документация под курсором) |
-| `gK` | Signature help |
-| `gd` | Go to definition |
-| `gD` | Go to declaration |
-| `gr` | References (через fzf-lua) |
-| `gI` | Go to implementations |
-| `gy` | Go to type definition |
-| `<leader>ca` | Code action |
-| `<leader>cr` | Rename |
-| `<leader>cs` | Symbols в буфере |
-| `<leader>cS` | Symbols по workspace |
-| `<leader>cf` | Format |
-| `]d` / `[d` | Следующая / предыдущая диагностика |
-| `<leader>cd` | Показать диагностику текущей строки |
+**Форматтеры** ([`conform.lua`](lua/plugins/conform.lua)): stylua, ruff_format + ruff_organize_imports, shfmt, goimports + gofumpt, markdownlint-cli2, jq, yamlfmt, taplo, terraform_fmt. `<leader>cf` форматирует, `<leader>uf` / `<leader>uF` глушат автоформат глобально / для буфера.
 
-### mini.files (файловый explorer, `<leader>e`)
+**Линтеры** ([`lint.lua`](lua/plugins/lint.lua)) — security-сканеры прямо в диагностике, по `BufReadPost` и `BufWritePost`: bandit (python), hadolint + trivy (dockerfile), trivy (terraform/hcl/yaml), golangci-lint (go). Ручной прогон — `<leader>cx`. Намеренно не на `InsertLeave`: trivy и golangci-lint форкают процесс на каждый вызов.
 
-| Клавиша | Действие |
-|---|---|
-| `l` | Войти (открыть файл / войти в директорию) |
-| `<CR>` | То же + закрыть explorer для файлов (`go_in_plus`) |
-| `L` | То же что `<CR>` |
-| `h` | Выйти на уровень выше |
-| `H` | То же + ужать колонки слева |
-| `q` или `<Esc>` | Закрыть explorer |
-| `g?` | Показать **все** дефолтные биндинги |
-| `=` | Синхронизировать изменения с диском |
-| `<` / `>` | Ужать / расширить дерево слева |
-| `m` `<letter>` | Поставить mark на путь (потом `'<letter>` — jump) |
+**Тесты и дебаг**: neotest с адаптерами go/python/plenary (`<leader>t*`), nvim-dap + dap-ui + virtual-text с адаптерами delve, debugpy и codelldb (`<leader>d*`). Подробности — в [`KEYMAPS.md`](KEYMAPS.md).
 
-**Создание / удаление / переименование** — редактируешь буфер как обычный текст, потом `=` или `:w` синхронизирует:
-- Добавил строку с именем → файл создастся
-- Добавил строку с `/` в конце → создастся директория
-- Изменил имя в строке → файл/директория переименуется
-- Удалил строку → файл удалится (с подтверждением)
+## Treesitter
 
-### Bufferline (табы сверху)
+Используется `nvim-treesitter` ветки `main` с синхронной доустановкой парсеров на старте. [`lua/plugins/treesitter.lua`](lua/plugins/treesitter.lua) сверяет список нужных парсеров с `stdpath("data") .. "/site/parser/"` и компилирует недостающие через `tree-sitter` CLI, блокируя старт. Один раз ~1 минута, дальше моментально.
 
-- `<S-h>` / `<S-l>` или `<Tab>` / `<S-Tab>` — переключение между табами
-- `<leader>bd` — закрыть текущий
-- `<leader>bp` — закрепить (pin)
-- `<leader>bo` — закрыть все кроме текущего
-- `<leader>bh` / `<leader>bl` — закрыть всё слева / справа
+Текущий набор: bash, c, cpp, css, diff, dockerfile, go (+ gomod/gosum/gotmpl/gowork), helm, hcl, html, ini, json, lua (+ luadoc/luap), make, markdown (+ markdown_inline), python, query, regex, rust, sql, terraform, toml, tsx, typescript, vim, vimdoc, yaml.
 
-### Noice (cmdline в центре)
+Добавить парсер: дописать в `parsers = {...}`, перезапустить nvim — он сам докомпилит недостающее.
 
-- `:` теперь открывает popup в центре экрана
-- `/` остаётся внизу (для классики)
-- Сообщения уезжают в notify-окошки в правом верхнем углу
-- `<leader>sn` — история сообщений
-- `<leader>un` — закрыть все notifications
+Почему нельзя обойтись bundled-парсерами: Neovim 0.12 несёт парсеры для c/lua/markdown/query/vim/vimdoc/diff, но queries из `main`-ветки nvim-treesitter используют поля (`operator:`, `field:`), которых в этих парсерах нет — открытие lua-файла падает с `Invalid field name`. Поэтому bundled-парсеры подменяются свежими.
 
-### which-key
+## Разработка конфига
 
-- `<leader>?` — показать все доступные биндинги текущего буфера
-- Просто нажми `<leader>` и подожди ~300мс — всплывёт меню с группами
-- `:WhichKey <leader>o` — конкретная группа (например, Obsidian)
+```bash
+make smoke      # загрузить весь конфиг headless, упасть на любой ошибке
+make test       # plenary busted, tests/*_spec.lua
+make test-file FILE=tests/templater_spec.lua
+make lint       # selene
+make fmt        # stylua, с записью
+make fmt-check  # stylua --check
+make all        # smoke + test + lint + fmt-check
+```
 
-## Treesitter parsers
+`selene` и `stylua` ставятся через `brew install selene stylua` (или mason — stylua там уже есть). Кастомный selene std для Neovim и busted живёт в [`vim.yml`](vim.yml).
 
-Конфиг использует `nvim-treesitter` (ветка `main`) с **синхронной установкой** парсеров на первом старте. Файл [`lua/plugins/treesitter.lua`](lua/plugins/treesitter.lua) проверяет список нужных парсеров в `~/.local/share/nvim-new/site/parser/`, и если каких-то нет — компилирует их через `tree-sitter` CLI блокирующе. Один раз ~1 минута, дальше моментально.
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) гоняет `stylua --check`, `selene` и юнит-тесты на nightly Neovim. `make smoke` в CI не гоняется — он тянет весь набор плагинов из сети и собирает парсеры, слишком флаки для гейта. Это локальный гейт.
 
-**Требование**: `tree-sitter` CLI на PATH. Ставится автоматически:
-- через Mason: `tree-sitter-cli` в `ensure_installed` ([`lua/plugins/mason.lua`](lua/plugins/mason.lua))
-- либо вручную: `cargo install tree-sitter-cli` или `npm install -g tree-sitter-cli`
+Pre-commit хук обновляет LoC-бейдж в README (нужен `tokei`), включается один раз:
 
-Текущий набор парсеров (см. список в `treesitter.lua`): bash, c, cpp, css, diff, dockerfile, go (+ gomod/gosum/gotmpl/gowork), helm, hcl, html, ini, json/jsonc, lua (+ luadoc/luap), make, markdown (+ markdown_inline), python, query, regex, rust, sql, terraform, toml, tsx, typescript, vim, vimdoc, yaml.
+```bash
+git config core.hooksPath .githooks
+```
 
-Чтобы добавить парсер: дописать в `parsers = {...}` в `treesitter.lua`, перезапустить nvim — он сам докомпилит недостающее.
+## TODO
 
-**Почему нельзя только bundled-парсеры**: Neovim 0.12.2 несёт парсеры для c/lua/markdown/query/vim/vimdoc/diff, но queries от nvim-treesitter `main` используют поля (`operator:`, `field:`) которых нет в старых bundled-парсерах — открытие lua-файла падает с `Invalid field name`. Поэтому подменяем bundled-парсеры свежими.
-
-## TODO / места для шлифовки
-
-- [ ] Проверить совместимость blink.cmp `v1` диапазона с твоим Neovim (`vim.version.range("v1")` в `plugins.lua`).
-- [ ] Решить, нужен ли DAP / sessions / trouble — добавить точечно.
-- [ ] Если стартап заметно медленный, перевести obsidian/quarto/render-md в ft-autocmd lazy-load.
-- [ ] Подровнять mini.statusline под вкус (по умолчанию даёт скромный single-line).
-- [ ] Опционально: codeium / copilot, если использовалось (в `blink.lua` была ссылка на codeium).
+- [ ] Подровнять mini.statusline под вкус.
+- [ ] Если стартап заметно просядет — перевести obsidian/quarto/render-md на ft-autocmd lazy-load (`nvim --startuptime /tmp/nv.log` перед тем, как что-то оптимизировать).
+- [ ] Решить, нужны ли sessions (persistence.nvim) и trouble.nvim.
+- [ ] Flash.nvim (`s`/`S`) — попробовать, если не хватает прыжков.

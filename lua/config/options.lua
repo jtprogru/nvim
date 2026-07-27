@@ -1,7 +1,13 @@
 local opt = vim.opt
-local HOME = os.getenv("HOME")
 
-vim.g.python3_host_prog = HOME .. "/.config/nvim-new/venv/bin/python3"
+-- Python provider: venv living next to this config (see README → Установка).
+-- Path is derived from stdpath("config"), so it follows NVIM_APPNAME instead of
+-- hardcoding ~/.config/nvim. If the venv isn't there, leave the provider unset
+-- and let Neovim fall back to whatever python3 is on PATH.
+local py = vim.fs.joinpath(vim.fn.stdpath("config"), "venv", "bin", "python3")
+if vim.fn.executable(py) == 1 then
+  vim.g.python3_host_prog = py
+end
 
 opt.number = true
 opt.relativenumber = true
