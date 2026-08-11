@@ -24,9 +24,10 @@ require("bufferline").setup({
         .. (diag.warning and icons.warning .. diag.warning or "")
       return vim.trim(ret)
     end,
+    -- The explorer sits on the right (plugins/neo-tree.lua); bufferline works
+    -- out the side from the window layout, so one entry covers both.
     offsets = {
       { filetype = "neo-tree", text = "Files", text_align = "center", highlight = "Directory" },
-      { filetype = "MiniFiles", text = "Files", text_align = "center", highlight = "Directory" },
     },
     show_buffer_close_icons = false,
     show_close_icon = false,

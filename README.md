@@ -1,6 +1,6 @@
 # nvim — конфиг для Neovim 0.12.x без LazyVim и без lazy.nvim
 
-![Lua LoC](https://img.shields.io/badge/lua-3062%20LoC-blueviolet?logo=lua)
+![Lua LoC](https://img.shields.io/badge/lua-3068%20LoC-blueviolet?logo=lua)
 
 Плагины ставит нативный `vim.pack`, LSP поднимается через `vim.lsp.config`/`vim.lsp.enable`. Никакого фреймворка сверху: всё, что делает конфиг, лежит в этом репозитории и читается за один вечер.
 
@@ -72,7 +72,7 @@ NVIM_APPNAME=nvim-jt nvim
 
 ### Что происходит на первом старте
 
-1. **`vim.pack` клонирует 37 плагинов** — одним блокирующим шагом, на минуту-полторы. Ревизии берутся из `nvim-pack-lock.json`, так что ты получаешь ровно тот срез, который закоммичен.
+1. **`vim.pack` клонирует 39 плагинов** — одним блокирующим шагом, на минуту-полторы. Ревизии берутся из `nvim-pack-lock.json`, так что ты получаешь ровно тот срез, который закоммичен.
 2. **mason через 3 секунды в фоне начинает ставить внешние инструменты** — LSP-серверы, линтеры, форматтеры, дебаг-адаптеры (список в [`lua/plugins/mason.lua`](lua/plugins/mason.lua)). Прогресс виден в `:Mason`.
 3. **nvim-treesitter пытается собрать парсеры** — и на совсем чистой машине спотыкается: `tree-sitter` CLI ещё ставится мейсоном. Конфиг честно скажет это в notify.
 
@@ -130,7 +130,7 @@ rm -rf ~/.config/nvim ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim
 | LSP | `vim.lsp.config` + `vim.lsp.enable` (0.11+), конфиги из nvim-lspconfig | ручной lspconfig-сетап |
 | Completion | blink.cmp | nvim-cmp / luasnip |
 | Picker | fzf-lua | snacks.picker / telescope |
-| Explorer | mini.files | neo-tree |
+| Explorer | neo-tree (сайдбар справа) | — |
 | Statusline | mini.statusline | lualine |
 | Tabline | bufferline.nvim | — |
 | Cmdline / messages | noice.nvim | — |
@@ -165,7 +165,8 @@ rm -rf ~/.config/nvim ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim
 │   │   ├── init.lua            # явный порядок загрузки
 │   │   ├── mason.lua           # mason + ensure_installed
 │   │   ├── treesitter.lua      # список парсеров + синхронная доустановка
-│   │   ├── mini.lua            # mini.* (icons/files/surround/ai/pairs/comment/bufremove)
+│   │   ├── mini.lua            # mini.* (icons/surround/ai/pairs/comment/bufremove/notify)
+│   │   ├── neo-tree.lua        # файловый сайдбар справа + <leader>e / <leader>E
 │   │   ├── mishka.lua          # бренд-тема поверх catppuccin
 │   │   ├── blink.lua           # completion
 │   │   ├── conform.lua         # форматтеры + :Format, :FormatToggle

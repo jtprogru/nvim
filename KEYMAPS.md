@@ -6,7 +6,7 @@
 
 - [`lua/config/keymaps.lua`](lua/config/keymaps.lua) — daily-driver биндинги
 - [`lua/config/lsp.lua`](lua/config/lsp.lua) — LSP (через `LspAttach`)
-- [`lua/plugins/<name>.lua`](lua/plugins/) — плагин-специфичные биндинги (obsidian, quarto, bufferline, conform, noice, img-clip)
+- [`lua/plugins/<name>.lua`](lua/plugins/) — плагин-специфичные биндинги (neo-tree, obsidian, quarto, bufferline, conform, noice, img-clip)
 
 ---
 
@@ -18,8 +18,8 @@
 | `<leader>,` | Switch buffer |
 | `<leader>/` | Live grep по проекту |
 | `<leader>:` | История команд |
-| `<leader>e` | Файловый explorer (mini.files, по директории буфера) |
-| `<leader>E` | Файловый explorer (cwd) |
+| `<leader>e` | Файловый explorer (neo-tree, сайдбар справа) — toggle |
+| `<leader>E` | Показать текущий файл в дереве (reveal) |
 | `<leader>gg` | LazyGit |
 | `<leader>?` | Биндинги текущего буфера (which-key) |
 | `<leader>qq` | Quit all |
@@ -89,28 +89,39 @@
 
 ---
 
-## Файловый explorer (mini.files)
+## Файловый explorer (neo-tree)
 
-Открывается через `<leader>e` (по директории буфера) или `<leader>E` (cwd).
+Постоянный сайдбар **справа**, ширина 34. `<leader>e` — toggle, `<leader>E` — reveal текущего файла. Дерево следит за активным буфером само (`follow_current_file`), так что reveal нужен в основном после `H` или фильтра.
 
 | Клавиша | Действие |
 |---|---|
-| `l` | Войти (открыть файл / войти в директорию) |
-| `<CR>` / `L` | То же + закрыть explorer для файлов |
-| `h` | Выйти на уровень выше |
-| `H` | То же + ужать колонки слева |
-| `q` или `<Esc>` | Закрыть explorer |
-| `g?` | Показать **все** биндинги |
-| `=` | Синхронизировать изменения с диском |
-| `<` / `>` | Ужать / расширить дерево слева |
-| `m` `<letter>` | Поставить mark на путь (потом `'<letter>` — jump) |
+| `<CR>` / `l` | Открыть файл / войти в директорию |
+| `h` | Свернуть узел (выйти на уровень выше) |
+| `q` или `<Esc>` | Закрыть сайдбар |
+| `?` | Показать **все** биндинги |
+| `a` / `A` | Создать файл / директорию (имя с `/` в конце — тоже директория) |
+| `d` | Удалить (с подтверждением) |
+| `r` | Rename |
+| `c` / `m` | Copy / move |
+| `x` / `y` / `p` | Cut / copy / paste (буфер обмена дерева) |
+| `H` | Показать/скрыть отфильтрованное (gitignored и т.п.) |
+| `/` | Fuzzy-фильтр по дереву |
+| `R` | Refresh |
+| `s` / `S` | Открыть в vertical / horizontal split |
+| `t` | Открыть в новом табе |
+| `P` | Toggle preview |
+| `.` | Сделать узел корнем дерева |
+| `<BS>` | Подняться на уровень выше корня |
 
-**CRUD через текст**: редактируй буфер как обычный, потом `=` или `:w`.
+Dotfiles видны по умолчанию (это конфиг-репозиторий), gitignored — скрыты; `.git` и `.DS_Store` не показываются вообще.
 
-- Новая строка с именем → файл создастся
-- Новая строка с `/` в конце → создастся директория
-- Изменил имя → renamed
-- Удалил строку → файл удалится (с подтверждением)
+Другие источники — через `:Neotree`:
+
+```vim
+:Neotree buffers right       " список открытых буферов
+:Neotree float git_status    " git status во всплывающем окне
+:Neotree toggle position=left " разово слева, если нужно
+```
 
 ---
 

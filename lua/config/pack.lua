@@ -22,6 +22,9 @@ vim.pack.add({
   { src = "https://github.com/akinsho/bufferline.nvim" },
 
   -- editor
+  -- neo-tree: right-hand file sidebar. Deps (plenary, nui, devicons) are above.
+  -- Pinned to the v3.x release branch — `main` is the upstream dev branch.
+  { src = "https://github.com/nvim-neo-tree/neo-tree.nvim", version = "v3.x" },
   { src = "https://github.com/mrjones2014/smart-splits.nvim" },
   { src = "https://github.com/ibhagwan/fzf-lua" },
   { src = "https://github.com/lewis6991/gitsigns.nvim" },

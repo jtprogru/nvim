@@ -130,22 +130,8 @@ map("n", "<leader>sc", "<cmd>FzfLua command_history<cr>", { desc = "Command hist
 map("n", "<leader>:", "<cmd>FzfLua command_history<cr>", { desc = "Command history" })
 map("n", "<leader>sR", "<cmd>FzfLua resume<cr>", { desc = "Resume picker" })
 
--- File explorer (mini.files)
---   <CR>     open file / enter dir
---   l / h    enter dir / go up
---   q / <Esc> close
---   g?       show full help with all bindings
---   gh       toggle hidden files
---   <C-w>v   open in vertical split
---   <C-w>s   open in horizontal split
---   <C-w>t   open in new tab
---   Edit the buffer like text to create/delete/rename, then :w to sync.
-map("n", "<leader>e", function()
-  require("mini.files").open(vim.api.nvim_buf_get_name(0), true)
-end, { desc = "Explorer (file dir)" })
-map("n", "<leader>E", function()
-  require("mini.files").open(vim.uv.cwd(), true)
-end, { desc = "Explorer (cwd)" })
+-- File explorer: neo-tree, right sidebar. <leader>e / <leader>E and the
+-- in-tree bindings live in plugins/neo-tree.lua, next to its setup().
 
 -- Floating terminal toggle (native :terminal, no plugin) — like the old config
 do
