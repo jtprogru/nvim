@@ -34,7 +34,18 @@ local function brand(c, link)
     -- Декоративный акцент (--accent-400): рамки, курсор строки, парные скобки.
     -- Это не текст, контраст тут не нормируется.
     FloatBorder = { fg = c.sapphire, bg = c.mantle },
-    WinSeparator = { fg = c.surface0 },
+
+    -- Граница между окнами. surface0 сливался с фоном, а сайдбар neo-tree
+    -- (plugins/neo-tree.lua) стоит вплотную к тексту — край панели надо видеть.
+    -- surface1 — фоновая ступень палитры, текстом она не используется, так что
+    -- линия читается и на latte, и на macchiato, но не спорит с кодом.
+    --
+    -- Дерево справа, а колонку-разделитель рисует ЛЕВОЕ окно — то есть буфер
+    -- с кодом и эта самая группа. NeoTreeWinSeparator нужен для случая, когда
+    -- справа от дерева есть ещё окно (`:Neotree position=left`, сплиты):
+    -- catppuccin гасит его в base, и граница снова исчезает.
+    WinSeparator = { fg = c.surface1 },
+    NeoTreeWinSeparator = { fg = c.surface1, bg = c.mantle },
     CursorLineNr = { fg = c.sapphire, style = { "bold" } },
     MatchParen = { fg = c.sapphire, bg = c.surface1, style = { "bold" } },
 
@@ -88,6 +99,9 @@ require("catppuccin").setup({
     gitsigns = true,
     mason = true,
     mini = { enabled = true, indentscope_color = "" },
+    -- Без него neo-tree наследует Normal, и панель сливается с буфером кода:
+    -- интеграция сажает её на mantle (§4, --bg-elev) и красит git-статусы.
+    neotree = true,
     neotest = true,
     noice = true,
     render_markdown = true,

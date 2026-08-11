@@ -56,7 +56,10 @@ opt.listchars = {
   precedes = "«",
   extends = "»",
 }
-opt.fillchars = { eob = " ", fold = " ", foldopen = "v", foldclose = ">", foldsep = "│" }
+-- `vert` — это линия между сплитами и краем сайдбара neo-tree. Совпадает с
+-- дефолтом Neovim, но записан явно: цвет ей задаёт WinSeparator в
+-- plugins/mishka.lua, и присваивание таблицей затирает опцию целиком.
+opt.fillchars = { eob = " ", fold = " ", foldopen = "v", foldclose = ">", foldsep = "│", vert = "│" }
 
 opt.foldmethod = "expr"
 opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
