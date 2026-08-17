@@ -1,6 +1,6 @@
 # nvim — конфиг для Neovim 0.12.x без LazyVim и без lazy.nvim
 
-![Lua LoC](https://img.shields.io/badge/lua-3068%20LoC-blueviolet?logo=lua)
+![Lua LoC](https://img.shields.io/badge/lua-3049%20LoC-blueviolet?logo=lua)
 
 Плагины ставит нативный `vim.pack`, LSP поднимается через `vim.lsp.config`/`vim.lsp.enable`. Никакого фреймворка сверху: всё, что делает конфиг, лежит в этом репозитории и читается за один вечер.
 

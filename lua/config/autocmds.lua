@@ -1,25 +1,6 @@
 local aug = vim.api.nvim_create_augroup
 local au = vim.api.nvim_create_autocmd
 
--- Sync background with macOS system appearance.
-local function sync_macos_background()
-  local out = vim.fn.system({ "defaults", "read", "-g", "AppleInterfaceStyle" })
-  local is_dark = vim.v.shell_error == 0 and out:match("Dark") ~= nil
-  local target = is_dark and "dark" or "light"
-  if vim.o.background ~= target then
-    vim.o.background = target
-  end
-end
-
-au({ "VimEnter", "FocusGained" }, {
-  group = aug("macos_background_sync", { clear = true }),
-  -- `nested` so the colorscheme reload triggered by changing `background` emits
-  -- its `ColorScheme` event. Without it the reload's `hi clear` wipes plugin
-  -- highlight groups (e.g. bufferline's) and nothing re-creates them.
-  nested = true,
-  callback = sync_macos_background,
-})
-
 -- Highlight on yank
 au("TextYankPost", {
   group = aug("highlight_yank", { clear = true }),

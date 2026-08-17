@@ -1,27 +1,27 @@
 -- Бренд-тема «Мишка на сервере» — слой поверх catppuccin.
 --
 -- Палитра и решения взяты из дизайн-кода блога jtprog.ru (BRANDING.md v0.2):
--- Latte на свету, Macchiato в темноте, единственный акцент — Sapphire.
--- catppuccin даёт базу и покрытие плагинов; всё «своё» живёт в `brand()` ниже.
+-- Macchiato как база, единственный акцент — Sapphire. catppuccin даёт базу и
+-- покрытие плагинов; всё «своё» живёт в `brand()` ниже.
 --
--- Светлая/тёмная выбирается по `background`, который config/autocmds.lua держит
--- в синхроне с macOS. Поэтому цвета в statusline/bufferline нельзя хардкодить —
--- их надо брать через require("catppuccin.palettes").get_palette(), она отдаёт
--- палитру активного flavour и переезжает вместе с ним.
+-- Тема зафиксирована тёмной: flavour задан явно, синхронизации с системной
+-- темой macOS нет. Светлый вариант (Latte) жил здесь раньше и ушёл вместе с
+-- ней; если он когда-нибудь вернётся, помни, что Latte Sapphire (#209fb5) даёт
+-- ~3.0:1 на светлом фоне и не проходит AA для текста обычного размера — ссылки
+-- на нём приходилось вести на затемнённой вручную ступени --accent-700
+-- (#0b7285), единственном цвете вне палитры.
+--
+-- Цвета в statusline/bufferline всё равно не хардкодим: их берут через
+-- require("catppuccin.palettes").get_palette(), она отдаёт палитру активного
+-- flavour.
 
--- Latte Sapphire (#209fb5) даёт ~3.0:1 на светлом фоне и не проходит AA для
--- текста обычного размера (§2, §8) — это свойство самой палитры, а не тона:
--- catppuccin проектировался под подсветку синтаксиса. Поэтому ссылки на светлой
--- теме идут на затемнённой вручную ступени --accent-700. Единственный цвет вне
--- палитры, осознанный тред-офф ради контраста.
-local ACCENT_700 = "#0b7285"
-
--- Бренд-слой. Одинаковый для обоих flavour, различается только цветом ссылок:
--- на тёмной хватает катпуччиновского Sapphire, на светлой — см. ACCENT_700.
+-- Бренд-слой поверх macchiato.
 --
 -- §2: акцентная шкала одна. Sapphire трогает ссылки, рамки, курсор и иконки —
 -- и не расползается дальше, палитры из многих равноправных цветов тут нет.
-local function brand(c, link)
+local function brand(c)
+  local link = c.sapphire
+
   return {
     -- Ссылки — акцент-текст.
     ["@markup.link"] = { fg = link },
@@ -69,10 +69,10 @@ local function brand(c, link)
 end
 
 require("catppuccin").setup({
-  -- "auto" = следовать `background`; конкретные flavour ниже (§2: Macchiato,
-  -- а не Frappe — тот светлее и хуже держит контраст на длинных полотнах).
-  flavour = "auto",
-  background = { light = "latte", dark = "macchiato" },
+  -- Всегда тёмная (§2: Macchiato, а не Frappe — тот светлее и хуже держит
+  -- контраст на длинных полотнах). Флавур задан явно, а не через "auto", чтобы
+  -- случайный `set background=light` не утащил тему в Latte.
+  flavour = "macchiato",
 
   term_colors = true,
   transparent_background = false,
@@ -111,12 +111,7 @@ require("catppuccin").setup({
   },
 
   highlight_overrides = {
-    latte = function(c)
-      return brand(c, ACCENT_700)
-    end,
-    macchiato = function(c)
-      return brand(c, c.sapphire)
-    end,
+    macchiato = brand,
   },
 })
 

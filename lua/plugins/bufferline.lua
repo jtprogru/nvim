@@ -1,14 +1,14 @@
 -- Make the active buffer clearly stand out. The default bufferline highlights
--- leave the selected buffer almost indistinguishable from the fill, especially
--- in the light palette. We give the tabline three background levels
--- (fill < inactive < selected) plus a bold active label and an accent bar.
+-- leave the selected buffer almost indistinguishable from the fill. We give the
+-- tabline three background levels (fill < inactive < selected) plus a bold
+-- active label and an accent bar.
 --
 -- `highlights` is passed as a *function* rather than a table: bufferline calls
 -- it again on every ColorScheme (config.lua Config:resolve -> bufferline.lua
--- ColorScheme autocmd), so reading the catppuccin palette inside means the
--- tabline follows the runtime light<->dark switch (see autocmds.lua). It also
--- derives the per-buffer icon backgrounds from these values, keeping the file
--- icon on the same background as its tab.
+-- ColorScheme autocmd), so reading the catppuccin palette inside keeps the
+-- tabline on whatever flavour is active. It also derives the per-buffer icon
+-- backgrounds from these values, keeping the file icon on the same background
+-- as its tab.
 --
 -- catppuccin has no palette-as-highlight-groups to link against, so colors are
 -- resolved from its palette API instead. Accent is Sapphire — the single brand
