@@ -16,7 +16,8 @@ require("obsidian").setup({
     default_tags = { "journal/daily" },
     template = "Ежедневная заметка.md",
   },
-  new_notes_location = "/00. Входящие",
+  new_notes_location = "notes_subdir",
+  notes_subdir = "00. Входящие",
   templates = {
     folder = "_Система/1. Шаблоны",
     date_format = "%Y-%m-%d",
