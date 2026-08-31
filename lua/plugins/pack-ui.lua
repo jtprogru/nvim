@@ -4,5 +4,5 @@
 require("pack_ui").setup({
   -- On startup, fetch remotes in the background and notify if any plugin has
   -- updates (no window opened, no changes applied).
-  auto_check = true,
+  auto_check = false,
 })
