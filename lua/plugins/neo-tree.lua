@@ -20,7 +20,7 @@ require("neo-tree").setup({
 
   window = {
     position = "right",
-    width = 34,
+    width = 45,
     mappings = {
       -- <space> is the leader. Left bound to toggle_node it makes every leader
       -- chord inside the tree wait for timeoutlen before firing.
